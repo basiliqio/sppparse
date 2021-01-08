@@ -1,6 +1,7 @@
 use crate::sparse_errors::SparseError;
 use getset::Getters;
 use serde::{Deserialize, Serialize};
+use serde_json::Value;
 use std::cell::RefCell;
 use std::collections::HashMap;
 use std::convert::From;
@@ -22,65 +23,52 @@ pub struct SparseRefRaw {
 }
 
 #[derive(Debug, Clone)]
-pub struct SparseState<'a, S: Serialize + Deserialize<'a>> {
-    map: Rc<HashMap<Option<PathBuf>, (File, Rc<RefCell<S>>)>>,
-    _l: std::marker::PhantomData<&'a S>,
+pub struct SparseState {
+    map: Rc<HashMap<Option<PathBuf>, (File, Rc<Value>)>>,
 }
 
 #[derive(Debug, Clone)]
-pub struct SparseRefLocal<'a, S: Serialize + Deserialize<'a>> {
-    val: Rc<RefCell<S>>,
+pub struct SparseRefLocal {
+    val: Rc<Value>,
     pointer: String,
-    _l: std::marker::PhantomData<&'a S>,
 }
 
 #[derive(Debug, Clone)]
-pub struct SparseRef<'a, S: Serialize + Deserialize<'a>> {
-    val: Rc<RefCell<S>>,
+pub struct SparseRef {
+    val: Rc<Value>,
     pfile_path: Option<Rc<File>>,
     pointer: String,
-    _l: std::marker::PhantomData<&'a S>,
 }
 
-pub trait SparseRefBase<'a, S: Serialize + Deserialize<'a>> {
-    fn new(val: Rc<RefCell<S>>, pointer: String, pfile_path: Option<Rc<File>>) -> Self;
-    fn get(&self) -> Rc<RefCell<S>>;
-    fn pointer(&'a self) -> &'a String;
+pub trait SparseRefBase {
+    fn new(val: Rc<Value>, pointer: String, pfile_path: Option<Rc<File>>) -> Self;
+    fn get(&self) -> Rc<Value>;
+    fn pointer(&self) -> &'_ String;
     fn can_handle_file() -> bool {
         false
     }
 }
 
-impl<'a, S: Serialize + Deserialize<'a>> SparseRefBase<'a, S> for SparseRefLocal<'a, S>
-where
-    S: Serialize + Deserialize<'a>,
-{
-    fn get(&self) -> Rc<RefCell<S>> {
+impl SparseRefBase for SparseRefLocal {
+    fn get(&self) -> Rc<Value> {
         self.val.clone()
     }
 
-    fn pointer(&'a self) -> &'a String {
+    fn pointer(&self) -> &'_ String {
         &self.pointer
     }
 
-    fn new(val: Rc<RefCell<S>>, pointer: String, _pfile_path: Option<Rc<File>>) -> Self {
-        SparseRefLocal {
-            val,
-            pointer,
-            _l: std::marker::PhantomData::default(),
-        }
+    fn new(val: Rc<Value>, pointer: String, _pfile_path: Option<Rc<File>>) -> Self {
+        SparseRefLocal { val, pointer }
     }
 }
 
-impl<'a, S: Serialize + Deserialize<'a>> SparseRefBase<'a, S> for SparseRef<'a, S>
-where
-    S: Serialize + Deserialize<'a>,
-{
-    fn get(&self) -> Rc<RefCell<S>> {
+impl SparseRefBase for SparseRef {
+    fn get(&self) -> Rc<Value> {
         self.val.clone()
     }
 
-    fn pointer(&'a self) -> &'a String {
+    fn pointer(&self) -> &'_ String {
         &self.pointer
     }
 
@@ -88,28 +76,23 @@ where
         true
     }
 
-    fn new(val: Rc<RefCell<S>>, pointer: String, pfile_path: Option<Rc<File>>) -> Self {
+    fn new(val: Rc<Value>, pointer: String, pfile_path: Option<Rc<File>>) -> Self {
         SparseRef {
             val,
             pointer,
             pfile_path,
-            _l: std::marker::PhantomData::default(),
         }
     }
 }
 
-impl<'a, S> SparseState<'a, S>
-where
-    S: Serialize + Deserialize<'a>,
-{
+impl SparseState {
     pub fn new() -> Self {
         SparseState {
             map: Rc::new(HashMap::new()),
-            _l: std::marker::PhantomData::default(),
         }
     }
 
-    pub fn get_val(&self, s: &Option<PathBuf>) -> Option<Rc<RefCell<S>>> {
+    pub fn get_val(&self, s: &Option<PathBuf>) -> Option<Rc<Value>> {
         self.map.get(s).map(|x| x.1.clone())
     }
 
@@ -139,10 +122,7 @@ impl SparseRefBuilder {
 
     // pub fn build_from_yaml<'a, T: Serialize + Deserialize<'a>>() -> Result<T, SparseError> {}
 
-    pub fn build<'a, T: Serialize + Deserialize<'a>, S: SparseRefBase<'a, T>>(
-        &self,
-        state: &SparseState<'a, T>,
-    ) -> Result<S, SparseError> {
+    pub fn build<S: SparseRefBase>(&self, state: &SparseState) -> Result<S, SparseError> {
         match &self.pfile_path {
             Some(pfile_path) => {
                 if S::can_handle_file() != true {
@@ -151,9 +131,12 @@ impl SparseRefBuilder {
                 unimplemented!();
             }
             None => {
-				let val: Rc<RefCell<T>> = state.get_val(&None).ok_or(SparseError::NotInState)?;
-				let deref_val = val.borrow().pointer(self.pointer.as_str());
-                Ok(S::new(val, self.pointer.clone(), None))
+                let val: Rc<Value> = state.get_val(&None).ok_or(SparseError::NotInState)?;
+                let deref_val: Value = val
+                    .pointer(self.pointer.as_str())
+                    .ok_or(SparseError::UnkownPath(self.pointer.clone()))?
+                    .clone();
+                Ok(S::new(Rc::new(deref_val), self.pointer.clone(), None))
             }
         }
     }
