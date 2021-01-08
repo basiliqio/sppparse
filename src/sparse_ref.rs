@@ -116,3 +116,12 @@ where
         }
     }
 }
+
+impl<'a, S> SparseRef<'a, S>
+where
+    S: Serialize + Deserialize<'a>,
+{
+    pub fn pfile_path(&self) -> &Option<PathBuf> {
+        &self.pfile_path
+    }
+}

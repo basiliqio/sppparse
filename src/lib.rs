@@ -11,6 +11,7 @@ use getset::Getters;
 use serde::{de::DeserializeOwned, Deserialize, Serialize};
 use serde_json::Value;
 use sparse_ref::{SparseRef, SparseRefBase, SparseRefLocal, SparseRefRaw};
+use sparse_selector::SparseSelector;
 
 use std::cell::RefCell;
 use std::collections::HashMap;
