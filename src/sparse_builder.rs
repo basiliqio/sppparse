@@ -14,25 +14,79 @@ impl From<SparseRefRaw> for SparseRefBuilder {
 }
 
 impl SparseRefBuilder {
-    // pub fn build_from_json<'a, T: Serialize + Deserialize<'a>>() -> Result<T, SparseError> {}
+    pub fn parse_json_file<'a, S: Serialize + DeserializeOwned>(
+        state: &Rc<RefCell<SparseState>>,
+        pfile_path: &PathBuf,
+    ) -> Result<S, SparseError> {
+        let file: File = File::open(pfile_path.to_owned())?;
+        let val: Value = serde_json::from_reader(file)?;
 
-    // pub fn build_from_yaml<'a, T: Serialize + Deserialize<'a>>() -> Result<T, SparseError> {}
+        state
+            .borrow()
+            .get_map()
+            .borrow_mut()
+            .insert(Some(pfile_path.clone()), Rc::new(RefCell::new(val.clone())));
+        Ok(serde_json::from_value(val)?)
+    }
 
-    pub fn build<S: SparseRefBase>(&self, state: &SparseState) -> Result<S, SparseError> {
+    pub fn parse_yaml_file<'a, S: Serialize + DeserializeOwned>(
+        state: &Rc<RefCell<SparseState>>,
+        pfile_path: &PathBuf,
+    ) -> Result<S, SparseError> {
+        let file: File = File::open(pfile_path.to_owned())?;
+        let val: Value = serde_yaml::from_reader(file)?;
+
+        state
+            .borrow()
+            .get_map()
+            .borrow_mut()
+            .insert(Some(pfile_path.clone()), Rc::new(RefCell::new(val.clone())));
+        Ok(serde_json::from_value(val)?)
+    }
+
+    pub fn build_owned<'a, S: Serialize + DeserializeOwned, T: SparseRefBase<'a, S>>(
+        &self,
+        state: &Rc<RefCell<SparseState>>,
+    ) -> Result<T, SparseError> {
         match &self.pfile_path {
-            Some(_pfile_path) => {
-                if S::can_handle_file() != true {
+            Some(pfile_path) => {
+                if T::can_handle_file() != true {
                     return Err(SparseError::NoDistantFile);
                 }
-                unimplemented!();
+                let extension: &str = pfile_path
+                    .extension()
+                    .ok_or(SparseError::BadExtension(None))?
+                    .to_str()
+                    .ok_or(SparseError::BadExtension(None))?;
+                let val: S = match extension {
+                    "json" => Self::parse_json_file(state, &pfile_path)?,
+                    "yaml" | "yml" => Self::parse_json_file(state, &pfile_path)?,
+                    _ => return Err(SparseError::BadExtension(Some(extension.to_string()))),
+                };
+                Ok(T::new(
+                    Rc::new(val),
+                    state.clone(),
+                    self.pointer.clone(),
+                    Some(pfile_path.clone()),
+                ))
             }
             None => {
-                let val: Rc<Value> = state.get_val(&None).ok_or(SparseError::NotInState)?;
+                let val: Rc<RefCell<Value>> = state
+                    .borrow()
+                    .get_val(&None)
+                    .ok_or(SparseError::NotInState)?;
                 let deref_val: Value = val
+                    .borrow()
                     .pointer(self.pointer.as_str())
                     .ok_or(SparseError::UnkownPath(self.pointer.clone()))?
                     .clone();
-                Ok(S::new(Rc::new(deref_val), self.pointer.clone(), None))
+                let parsed_val: S = serde_json::from_value::<S>(deref_val)?;
+                Ok(T::new(
+                    Rc::new(parsed_val),
+                    state.clone(),
+                    self.pointer.clone(),
+                    None,
+                ))
             }
         }
     }

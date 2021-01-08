@@ -8,4 +8,12 @@ pub enum SparseError {
     NoDistantFile,
     #[error("File not in state")]
     NotInState,
+    #[error("The extension `{0:?}` is not parsable. (.json, .yaml, .yml are allowed)")]
+    BadExtension(Option<String>),
+    #[error(transparent)]
+    SerdeJson(#[from] serde_json::Error),
+    #[error(transparent)]
+    SerdeYaml(#[from] serde_yaml::Error),
+    #[error(transparent)]
+    IO(#[from] std::io::Error),
 }
