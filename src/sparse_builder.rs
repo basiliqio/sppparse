@@ -1,114 +1,10 @@
-use crate::sparse_errors::SparseError;
-use getset::Getters;
-use serde::{Deserialize, Serialize};
-use serde_json::Value;
-use std::cell::RefCell;
-use std::collections::HashMap;
-use std::convert::From;
-use std::fs::File;
-use std::path::PathBuf;
-use std::rc::Rc;
+use super::*;
 
 #[derive(Debug, Getters, Clone)]
 #[getset(get = "pub")]
 pub struct SparseRefBuilder {
     pfile_path: Option<PathBuf>,
     pointer: String,
-}
-
-#[derive(Serialize, Deserialize, Debug, Clone)]
-pub struct SparseRefRaw {
-    #[serde(rename = "$ref")]
-    ref_: String,
-}
-
-#[derive(Debug, Clone)]
-pub struct SparseState {
-    map: Rc<HashMap<Option<PathBuf>, (File, Rc<Value>)>>,
-}
-
-#[derive(Debug, Clone)]
-pub struct SparseRefLocal {
-    val: Rc<Value>,
-    pointer: String,
-}
-
-#[derive(Debug, Clone)]
-pub struct SparseRef {
-    val: Rc<Value>,
-    pfile_path: Option<Rc<File>>,
-    pointer: String,
-}
-
-pub trait SparseRefBase {
-    fn new(val: Rc<Value>, pointer: String, pfile_path: Option<Rc<File>>) -> Self;
-    fn get(&self) -> Rc<Value>;
-    fn pointer(&self) -> &'_ String;
-    fn can_handle_file() -> bool {
-        false
-    }
-}
-
-impl SparseRefBase for SparseRefLocal {
-    fn get(&self) -> Rc<Value> {
-        self.val.clone()
-    }
-
-    fn pointer(&self) -> &'_ String {
-        &self.pointer
-    }
-
-    fn new(val: Rc<Value>, pointer: String, _pfile_path: Option<Rc<File>>) -> Self {
-        SparseRefLocal { val, pointer }
-    }
-}
-
-impl SparseRefBase for SparseRef {
-    fn get(&self) -> Rc<Value> {
-        self.val.clone()
-    }
-
-    fn pointer(&self) -> &'_ String {
-        &self.pointer
-    }
-
-    fn can_handle_file() -> bool {
-        true
-    }
-
-    fn new(val: Rc<Value>, pointer: String, pfile_path: Option<Rc<File>>) -> Self {
-        SparseRef {
-            val,
-            pointer,
-            pfile_path,
-        }
-    }
-}
-
-impl SparseState {
-    pub fn new() -> Self {
-        SparseState {
-            map: Rc::new(HashMap::new()),
-        }
-    }
-
-    pub fn get_val(&self, s: &Option<PathBuf>) -> Option<Rc<Value>> {
-        self.map.get(s).map(|x| x.1.clone())
-    }
-
-    pub fn get_file(&self, s: &Option<PathBuf>) -> Option<&File> {
-        self.map.get(s).map(|x| &x.0)
-    }
-}
-
-impl SparseRefRaw {
-    fn get(&self) -> &String {
-        &self.ref_
-    }
-
-    fn builder(&self) -> SparseRefBuilder {
-        SparseRefBuilder::from(self)
-    }
 }
 
 impl From<SparseRefRaw> for SparseRefBuilder {
@@ -124,7 +20,7 @@ impl SparseRefBuilder {
 
     pub fn build<S: SparseRefBase>(&self, state: &SparseState) -> Result<S, SparseError> {
         match &self.pfile_path {
-            Some(pfile_path) => {
+            Some(_pfile_path) => {
                 if S::can_handle_file() != true {
                     return Err(SparseError::NoDistantFile);
                 }
