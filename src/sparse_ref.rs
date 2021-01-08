@@ -73,4 +73,3 @@ impl SparseRefBase for SparseRef {
         }
     }
 }
-
