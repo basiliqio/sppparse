@@ -1,0 +1,13 @@
+{
+	"hello": "world",
+	"obj": {
+		"key1": 
+		{
+			"$ref": "./read_multi_files0.json#/val"
+		},
+		"key2": 
+		{
+			"$ref": "./read_multi_files1.json#/val"
+		}
+	}
+}

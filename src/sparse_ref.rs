@@ -2,6 +2,7 @@ use super::*;
 use std::borrow::Borrow;
 use std::cell::Ref;
 use std::collections::hash_map::DefaultHasher;
+use std::fs;
 use std::hash::Hash;
 use std::marker::PhantomData;
 
@@ -60,9 +61,10 @@ where
                     pointer_path_str = (&pointer_str[1..pointer_str.len()]).to_string();
                 }
                 _ => {
+                    let old_len = pointer_str.len();
                     pointer_path_str =
-                        (&(pointer_str.split_off(pos))[1..pointer_str.len()]).to_string();
-                    pfile = Some(PathBuf::from(pointer_path_str.as_str()));
+                        (&(pointer_str.split_off(pos))[1..(old_len - pos)]).to_string();
+                    pfile = Some(PathBuf::from(pointer_str.as_str()));
                 }
             },
             None => {
@@ -104,17 +106,53 @@ where
         match is_val_empty {
             false => Ok(Ref::map(self.val.borrow(), |x| x.as_ref().unwrap())),
             true => {
-                let state_file = state
-                    .get_val(&self.pfile_path())
-                    .ok_or(SparseError::NotInState)?;
-                let map: Ref<'_, Value> = state_file.borrow();
-                let nval: S = serde_json::from_value::<S>(
-                    map.pointer(pointer.as_str())
-                        .ok_or(SparseError::UnkownPath(pointer.clone()))?
-                        .clone(),
-                )?;
-                self.val.replace(Some(nval));
-                Ok(Ref::map(self.val.borrow(), |x| x.as_ref().unwrap()))
+                let path: Option<PathBuf> = match self.pfile_path().is_some() {
+                    true => {
+                        let mut path: PathBuf = state.get_base_path().clone();
+                        path.pop(); // Remove the file name
+                        path.push(
+                            self.pfile_path()
+                                .as_ref()
+                                .ok_or(SparseError::NotInState)?
+                                .as_path(),
+                        );
+                        Some(fs::canonicalize(path)?)
+                    }
+                    false => None,
+                };
+
+                let state_file = state.get_val(&path);
+                match state_file {
+                    Some(state_file) => {
+                        let map: Ref<'_, Value> = state_file.borrow();
+                        let nval: S = serde_json::from_value::<S>(
+                            map.pointer(pointer.as_str())
+                                .ok_or(SparseError::UnkownPath(pointer.clone()))?
+                                .clone(),
+                        )?;
+                        self.val.replace(Some(nval));
+                        Ok(Ref::map(self.val.borrow(), |x| x.as_ref().unwrap()))
+                    }
+                    None => {
+                        let mut path: PathBuf = state.get_base_path().clone();
+                        path.pop(); // Remove the file name
+                        path.push(
+                            self.pfile_path()
+                                .as_ref()
+                                .ok_or(SparseError::NotInState)?
+                                .as_path(),
+                        );
+                        let file: File = File::open(path.as_path())?;
+                        let json_val: Value = serde_json::from_reader(file)?;
+                        {
+                            state.get_map().borrow_mut().insert(
+                                Some(fs::canonicalize(path.clone())?),
+                                RefCell::new(json_val),
+                            );
+                        }
+                        Ok(self.get(state)?)
+                    }
+                }
             }
         }
     }
