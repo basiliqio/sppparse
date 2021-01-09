@@ -1,0 +1,17 @@
+{
+	"hello": "world",
+	"obj": {
+		"key1": 
+		{
+			"$ref": "#/hello"
+		},
+		"key2": 
+		{
+			"$ref": "#/hello"
+		},
+		"key3": 
+		{
+			"$ref": "#/hello"
+		}
+	}
+}
