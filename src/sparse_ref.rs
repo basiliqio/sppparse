@@ -81,7 +81,7 @@ where
         (pfile, pointer_path_str)
     }
 
-    fn get_file(&self, state: &SparseState) -> Result<Option<PathBuf>, SparseError> {
+    fn get_pfile_path(&self, state: &SparseState) -> Result<Option<PathBuf>, SparseError> {
         let (pfile_path, pointer) = self.parse_pointer_if_uninitialized()?;
         let path: Option<PathBuf> = match &*pfile_path {
             Some(pfile_path) => {
@@ -96,14 +96,7 @@ where
     }
 
     pub fn get(&self, state: &SparseState) -> Result<Ref<S>, SparseError> {
-        let is_pointer_parsed: bool;
-        {
-            is_pointer_parsed = match &*self.pointer.borrow() {
-                Some(x) => true,
-                None => false,
-            };
-        }
-
+        let pfile_path = self.get_pfile_path(state)?;
         let is_val_empty: bool;
         {
             let val: Ref<Option<S>> = self.val.borrow();
@@ -113,56 +106,14 @@ where
             };
         }
 
-        match is_pointer_parsed {
-            true => (),
-            false => {
-                let (pfile_path, pointer) = self.parse_pointer();
-                self.pfile_path.replace(pfile_path);
-                self.pointer.replace(Some(pointer));
-            }
-        };
-        let pointer_ref = self.pointer();
-        let pointer = pointer_ref.as_ref().unwrap();
         match is_val_empty {
             false => Ok(Ref::map(self.val.borrow(), |x| x.as_ref().unwrap())),
             true => {
-                let path: Option<PathBuf> = match self.pfile_path().is_some() {
-                    true => {
-                        let mut path: PathBuf = state.get_base_path().clone();
-                        path.pop(); // Remove the file name
-                        path.push(
-                            self.pfile_path()
-                                .as_ref()
-                                .ok_or(SparseError::NotInState)?
-                                .as_path(),
-                        );
-                        Some(fs::canonicalize(path)?)
-                    }
-                    false => None,
-                };
-
-                let state_file = state.get_val(&path);
+                let state_file = state.get_val(&pfile_path);
                 match state_file {
-                    Some(state_file) => {
-                        let map: Ref<'_, SparseStateFile> = state_file.borrow();
-                        let nval: S = serde_json::from_value::<S>(
-                            map.val()
-                                .pointer(pointer.as_str())
-                                .ok_or(SparseError::UnkownPath(pointer.clone()))?
-                                .clone(),
-                        )?;
-                        self.val.replace(Some(nval));
-                        Ok(Ref::map(self.val.borrow(), |x| x.as_ref().unwrap()))
-                    }
+                    Some(state_file) => Ok(self.get_val(&state_file.borrow())?),
                     None => {
-                        let mut path: PathBuf = state.get_base_path().clone();
-                        path.pop(); // Remove the file name
-                        path.push(
-                            self.pfile_path()
-                                .as_ref()
-                                .ok_or(SparseError::NotInState)?
-                                .as_path(),
-                        );
+                        let path = pfile_path.as_ref().ok_or(SparseError::NoDistantFile)?;
                         let file: File = File::open(path.as_path())?;
                         let json_val: Value = serde_json::from_reader(file)?;
                         {
@@ -178,27 +129,34 @@ where
         }
     }
 
-    fn should_reparse(&self, state: &SparseState) -> Result<bool, SparseError> {
+    fn get_val(&self, state_file: &SparseStateFile) -> Result<Ref<S>, SparseError> {
         let (_pfile_path, pointer) = self.parse_pointer_if_uninitialized()?;
-        let mut hasher = DefaultHasher::new();
 
         let res: bool = match *self.last_version.borrow() {
             Some(last_version) => {
-                let path = self.get_file(state)?;
-                match state.get_val(&path) {
-                    Some(val) => {
-                        let state_val = val.borrow();
-                        match state_val.val().pointer(pointer.as_str()) {
-                            Some(_v) => state_val.version() != last_version,
-                            None => true,
-                        }
-                    }
-                    None => true,
+                let state_val = state_file.borrow();
+                match state_val.val().pointer(pointer.as_str()) {
+                    Some(_v) => state_val.version() != last_version,
+                    None => false,
                 }
             }
-            None => true,
+            None => false,
         };
-        Ok(res)
+        match res {
+            true => Ok(Ref::map(self.val.borrow(), |x| x.as_ref().unwrap())),
+            false => {
+                let nval: S = serde_json::from_value::<S>(
+                    state_file
+                        .borrow()
+                        .val()
+                        .pointer(pointer.as_str())
+                        .ok_or(SparseError::UnkownPath(pointer.clone()))?
+                        .clone(),
+                )?;
+                self.val.replace(Some(nval));
+                Ok(Ref::map(self.val.borrow(), |x| x.as_ref().unwrap()))
+            }
+        }
     }
 
     pub fn pointer(&self) -> Ref<'_, Option<String>> {
