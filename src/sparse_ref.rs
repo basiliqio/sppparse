@@ -4,28 +4,15 @@ use std::cell::Ref;
 use std::collections::hash_map::DefaultHasher;
 use std::fs;
 use std::hash::Hash;
+use std::hash::Hasher;
 use std::marker::PhantomData;
-
-#[derive(Serialize, Deserialize, Debug, Clone)]
-pub struct SparseRefRaw {
-    #[serde(rename = "$ref")]
-    ref_: String,
-}
-
-impl SparseRefRaw {
-    pub fn get(&self) -> &String {
-        &self.ref_
-    }
-
-    pub fn builder(&self) -> SparseRefBuilder {
-        SparseRefBuilder::from(self)
-    }
-}
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct SparseRef<S: Serialize + for<'a> Deserialize<'a>> {
     #[serde(skip)]
     val: RefCell<Option<S>>,
+    #[serde(skip)]
+    last_version: RefCell<Option<u64>>,
     #[serde(skip)]
     pfile_path: RefCell<Option<PathBuf>>,
     #[serde(rename = "$ref")]
@@ -36,19 +23,38 @@ pub struct SparseRef<S: Serialize + for<'a> Deserialize<'a>> {
     // _l: PhantomData<str>,
 }
 
-pub trait SparseRefBase<S: Serialize + for<'a> Deserialize<'a>> {
-    fn new(raw_pointer: String) -> Self;
-    // fn new_from_value(val: Rc<Value>, pointer: String, pfile_path: Option<Rc<File>>) -> Self;
-    fn get(&self, state: &SparseState) -> Result<Ref<'_, S>, SparseError>;
-    fn pointer(&self) -> Ref<'_, Option<String>>;
-    fn parse_pointer(&self) -> (Option<PathBuf>, String);
-}
-
-impl<S> SparseRefBase<S> for SparseRef<S>
+impl<S> SparseRef<S>
 where
     S: Serialize + DeserializeOwned,
 {
-    fn parse_pointer(&self) -> (Option<PathBuf>, String) {
+    fn parse_pointer_if_uninitialized(
+        &self,
+    ) -> Result<(Ref<Option<PathBuf>>, Ref<String>), SparseError> {
+        match self.is_pointer_parsed() {
+            true => (),
+            false => {
+                let (pfile_path, pointer) = self.parse_pointer();
+                self.pfile_path.replace(pfile_path);
+                self.pointer.replace(Some(pointer));
+            }
+        };
+        let pointer = Ref::map(self.pointer(), |x| x.as_ref().unwrap());
+        let pfile_path = self.pfile_path();
+        Ok((pfile_path, pointer))
+    }
+
+    pub fn is_pointer_parsed(&self) -> bool {
+        let is_pointer_parsed: bool;
+        {
+            is_pointer_parsed = match &*self.pointer.borrow() {
+                Some(x) => true,
+                None => false,
+            };
+        }
+        is_pointer_parsed
+    }
+
+    pub fn parse_pointer(&self) -> (Option<PathBuf>, String) {
         let mut pointer_str: String = self.raw_pointer.clone();
         let hash_pos: Option<usize> = pointer_str.find("#");
         let pfile: Option<PathBuf>;
@@ -75,7 +81,21 @@ where
         (pfile, pointer_path_str)
     }
 
-    fn get(&self, state: &SparseState) -> Result<Ref<S>, SparseError> {
+    fn get_file(&self, state: &SparseState) -> Result<Option<PathBuf>, SparseError> {
+        let (pfile_path, pointer) = self.parse_pointer_if_uninitialized()?;
+        let path: Option<PathBuf> = match &*pfile_path {
+            Some(pfile_path) => {
+                let mut path: PathBuf = state.get_base_path().clone();
+                path.pop(); // Remove the file name
+                path.push(pfile_path.as_path());
+                Some(fs::canonicalize(path)?)
+            }
+            None => None,
+        };
+        Ok(path)
+    }
+
+    pub fn get(&self, state: &SparseState) -> Result<Ref<S>, SparseError> {
         let is_pointer_parsed: bool;
         {
             is_pointer_parsed = match &*self.pointer.borrow() {
@@ -124,9 +144,10 @@ where
                 let state_file = state.get_val(&path);
                 match state_file {
                     Some(state_file) => {
-                        let map: Ref<'_, Value> = state_file.borrow();
+                        let map: Ref<'_, SparseStateFile> = state_file.borrow();
                         let nval: S = serde_json::from_value::<S>(
-                            map.pointer(pointer.as_str())
+                            map.val()
+                                .pointer(pointer.as_str())
                                 .ok_or(SparseError::UnkownPath(pointer.clone()))?
                                 .clone(),
                         )?;
@@ -147,7 +168,7 @@ where
                         {
                             state.get_map().borrow_mut().insert(
                                 Some(fs::canonicalize(path.clone())?),
-                                RefCell::new(json_val),
+                                RefCell::new(SparseStateFile::new(json_val)),
                             );
                         }
                         Ok(self.get(state)?)
@@ -157,13 +178,37 @@ where
         }
     }
 
-    fn pointer(&self) -> Ref<'_, Option<String>> {
+    fn should_reparse(&self, state: &SparseState) -> Result<bool, SparseError> {
+        let (_pfile_path, pointer) = self.parse_pointer_if_uninitialized()?;
+        let mut hasher = DefaultHasher::new();
+
+        let res: bool = match *self.last_version.borrow() {
+            Some(last_version) => {
+                let path = self.get_file(state)?;
+                match state.get_val(&path) {
+                    Some(val) => {
+                        let state_val = val.borrow();
+                        match state_val.val().pointer(pointer.as_str()) {
+                            Some(_v) => state_val.version() != last_version,
+                            None => true,
+                        }
+                    }
+                    None => true,
+                }
+            }
+            None => true,
+        };
+        Ok(res)
+    }
+
+    pub fn pointer(&self) -> Ref<'_, Option<String>> {
         self.pointer.borrow()
     }
 
-    fn new(raw_pointer: String) -> Self {
+    pub fn new(raw_pointer: String) -> Self {
         let res = SparseRef {
             val: RefCell::new(None),
+            last_version: RefCell::new(None),
             pointer: RefCell::new(None),
             pfile_path: RefCell::new(None),
             raw_pointer,
@@ -172,12 +217,6 @@ where
         res.parse_pointer();
         res
     }
-}
-
-impl<S> SparseRef<S>
-where
-    S: Serialize + for<'a> Deserialize<'a>,
-{
     pub fn pfile_path(&self) -> Ref<'_, Option<PathBuf>> {
         self.pfile_path.borrow()
     }

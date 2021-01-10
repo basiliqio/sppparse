@@ -2,7 +2,6 @@ extern crate sparse;
 
 use serde::Deserialize;
 use serde_json::value::Value;
-use sparse::sparse_ref::{SparseRefBase, SparseRefRaw};
 use sparse::sparse_selector::SparseSelector;
 use sparse::sparse_state::SparseState;
 use std::collections::HashMap;
