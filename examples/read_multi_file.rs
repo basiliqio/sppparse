@@ -15,7 +15,8 @@ struct ObjectExampleParsed {
 }
 
 fn main() {
-    let state: SparseState = SparseState::new(PathBuf::from("./examples/read_multi_files.json"));
+    let state: SparseState =
+        SparseState::new(Some(PathBuf::from("./examples/read_multi_files.json")));
     let file: File =
         File::open("./examples/read_multi_files.json").expect("Can't open the example json");
     let json_val: Value = serde_json::from_reader(file).expect("Should parse the example json");
