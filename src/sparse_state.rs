@@ -43,6 +43,18 @@ impl<'a> SparseState<'a> {
         }
     }
 
+    pub fn new_local(val: Value) -> Self {
+        let obj = SparseState {
+            map: Rc::new(RefCell::new(HashMap::new())),
+            base_path: None,
+            _l: PhantomData::default(),
+        };
+        (*obj.map.clone())
+            .borrow_mut()
+            .insert(None, RefCell::new(SparseStateFile::new(val)));
+        obj
+    }
+
     pub fn get_val(&self, s: &Option<PathBuf>) -> Option<RefCell<SparseStateFile>> {
         self.map.borrow().get(s).map(|x| x.clone())
     }

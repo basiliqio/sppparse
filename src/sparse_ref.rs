@@ -25,9 +25,7 @@ impl<S> SparseRef<S>
 where
     S: Serialize + DeserializeOwned,
 {
-    fn parse_pointer_if_uninitialized(
-        &self,
-    ) -> Result<(Ref<Option<PathBuf>>, Ref<String>), SparseError> {
+    fn parse_pointer_if_uninitialized(&self) -> (Ref<Option<PathBuf>>, Ref<String>) {
         match self.is_pointer_parsed() {
             true => (),
             false => {
@@ -38,14 +36,14 @@ where
         };
         let pointer = Ref::map(self.pointer(), |x| x.as_ref().unwrap());
         let pfile_path = self.pfile_path();
-        Ok((pfile_path, pointer))
+        (pfile_path, pointer)
     }
 
     pub fn is_pointer_parsed(&self) -> bool {
         let is_pointer_parsed: bool;
         {
             is_pointer_parsed = match &*self.pointer.borrow() {
-                Some(x) => true,
+                Some(_x) => true,
                 None => false,
             };
         }
@@ -80,7 +78,7 @@ where
     }
 
     fn get_pfile_path(&self, state: &SparseState) -> Result<Option<PathBuf>, SparseError> {
-        let (pfile_path, _pointer) = self.parse_pointer_if_uninitialized()?;
+        let (pfile_path, _pointer) = self.parse_pointer_if_uninitialized();
         let path: Option<PathBuf> = match &*pfile_path {
             Some(pfile_path) => {
                 match state.get_base_path().clone() {
@@ -126,7 +124,7 @@ where
     }
 
     fn get_val(&self, state_file: &SparseStateFile) -> Result<Ref<S>, SparseError> {
-        let (_pfile_path, pointer) = self.parse_pointer_if_uninitialized()?;
+        let (_pfile_path, pointer) = self.parse_pointer_if_uninitialized();
 
         let res: bool = match *self.last_version.borrow() {
             Some(last_version) => {
