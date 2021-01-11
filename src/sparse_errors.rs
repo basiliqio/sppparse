@@ -6,6 +6,8 @@ pub enum SparseError {
     UnkownPath(String),
     #[error("Referencing distant file is not possible for local reference")]
     NoDistantFile,
+    #[error("Cannot add that file to the state, it already exists")]
+    AlreadyExistsInState,
     #[error("File not in state")]
     NotInState,
     #[error("The extension `{0:?}` is not parsable. (.json, .yaml, .yml are allowed)")]

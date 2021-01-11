@@ -19,8 +19,6 @@ pub struct SparseRef<S: Serialize + for<'a> Deserialize<'a>> {
     raw_pointer: String,
     #[serde(skip)]
     pointer: RefCell<Option<String>>,
-    // #[serde(skip)]
-    // _l: PhantomData<str>,
 }
 
 impl<S> SparseRef<S>
@@ -82,13 +80,17 @@ where
     }
 
     fn get_pfile_path(&self, state: &SparseState) -> Result<Option<PathBuf>, SparseError> {
-        let (pfile_path, pointer) = self.parse_pointer_if_uninitialized()?;
+        let (pfile_path, _pointer) = self.parse_pointer_if_uninitialized()?;
         let path: Option<PathBuf> = match &*pfile_path {
             Some(pfile_path) => {
-                let mut path: PathBuf = state.get_base_path().clone();
-                path.pop(); // Remove the file name
-                path.push(pfile_path.as_path());
-                Some(fs::canonicalize(path)?)
+                match state.get_base_path().clone() {
+                    Some(mut path) => {
+                        path.pop(); // Remove the file name
+                        path.push(pfile_path.as_path());
+                        Some(fs::canonicalize(path)?)
+                    }
+                    None => None,
+                }
             }
             None => None,
         };
@@ -112,7 +114,7 @@ where
                         let json_val: Value = serde_json::from_reader(file)?;
                         {
                             state.get_map().borrow_mut().insert(
-                                Some(fs::canonicalize(path.clone())?),
+                                Some(path.clone()),
                                 RefCell::new(SparseStateFile::new(json_val)),
                             );
                         }
@@ -164,7 +166,6 @@ where
             pointer: RefCell::new(None),
             pfile_path: RefCell::new(None),
             raw_pointer,
-            // _l: PhantomData::default()
         };
         res.parse_pointer();
         res
