@@ -9,9 +9,10 @@ build_and_test_rust:
   before_script:
     - export PATH=$PATH:/root/.cargo/bin/
     - mkdir -p .git/hooks
+    - export NAME=sparse
   script:
     - cargo fmt -- --check
     - cargo build --all-targets
-    - for file in $(find target/debug/deps -executable -name "$(basename iqiper_mocker)-*"); do kcov target/kcov --exclude-pattern=/.cargo $file ; done
+    - for file in $(find target/debug/deps -executable -name "$(basename $NAME)-*"); do mkdir -p "target/cov/$(basename $file)"; kcov "target/cov/$(basename $file)" --exclude-pattern=/.cargo,/usr/lib  --verify $file ; done
   after_script:
-    - bash <(curl -s https://codecov.io/bash) -t $CODECOV_TOKEN
+    - bash <(curl -s https://codecov.io/bash) -t $CODECOV_TOKEN -s target/cov
