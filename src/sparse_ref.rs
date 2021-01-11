@@ -97,18 +97,12 @@ where
 
     pub fn get(&self, state: &SparseState) -> Result<Ref<S>, SparseError> {
         let pfile_path = self.get_pfile_path(state)?;
-        let is_val_empty: bool;
-        {
-            let val: Ref<Option<S>> = self.val.borrow();
-            is_val_empty = match &*val {
-                Some(_x) => false,
-                None => true,
-            };
-        }
+        let self_val = self.val.borrow();
 
-        match is_val_empty {
-            false => Ok(Ref::map(self.val.borrow(), |x| x.as_ref().unwrap())),
-            true => {
+        match &*self_val {
+            Some(_x) => Ok(Ref::map(self_val, |x| x.as_ref().unwrap())),
+            None => {
+                drop(self_val); // Free the borrow
                 let state_file = state.get_val(&pfile_path);
                 match state_file {
                     Some(state_file) => Ok(self.get_val(&state_file.borrow())?),
