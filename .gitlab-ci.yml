@@ -8,6 +8,7 @@ build_and_test_rust:
   stage: test
   before_script:
     - export PATH=$PATH:/root/.cargo/bin/
+    - mkdir -p .git/hooks
   script:
     - cargo fmt -- --check
     - cargo build --all-targets
