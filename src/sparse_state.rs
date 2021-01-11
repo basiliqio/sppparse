@@ -1,6 +1,10 @@
 use super::*;
 use getset::{CopyGetters, Getters};
 use std::borrow::BorrowMut;
+use std::fs;
+use std::io::Seek;
+use std::io::SeekFrom;
+use std::io::Write;
 use std::marker::PhantomData;
 use std::path::PathBuf;
 
@@ -68,7 +72,6 @@ impl<'a> SparseState<'a> {
         let npath: PathBuf = match path.is_absolute() {
             true => path,
             false => {
-                let mut path = path;
                 let mut base_path: PathBuf = self
                     .get_base_path()
                     .clone()
@@ -83,6 +86,36 @@ impl<'a> SparseState<'a> {
             return Err(SparseError::AlreadyExistsInState);
         }
         map.insert(Some(npath), RefCell::new(SparseStateFile::new(val)));
+        Ok(())
+    }
+
+    pub fn set_base_path(&mut self, base_path: PathBuf) -> Result<(), SparseError> {
+        match &self.base_path {
+            Some(_x) => return Err(SparseError::ChangingExistingBasePath),
+            None => (),
+        };
+        self.base_path = Some(base_path);
+        Ok(())
+    }
+
+    pub fn save_to_disk(&self, pretty: bool) -> Result<(), SparseError> {
+        let map = self.map.borrow();
+        let mut files: Vec<(File, &RefCell<SparseStateFile>)> = Vec::new();
+
+        for (path_buf, val) in map.iter() {
+            let path = path_buf.as_ref().ok_or(SparseError::NoDistantFile)?;
+            let mut file = fs::OpenOptions::new().append(true).open(path)?;
+            file.seek(SeekFrom::Start(0))?;
+            files.push((fs::OpenOptions::new().append(true).open(path)?, val));
+        }
+        for (mut file, state_file) in files.into_iter() {
+            let val = match pretty {
+                true => serde_json::to_string_pretty(state_file.borrow().val())?,
+                false => serde_json::to_string(state_file.borrow().val())?,
+            };
+            file.write(val.as_bytes())?;
+            file.set_len(val.len() as u64)?;
+        }
         Ok(())
     }
 }

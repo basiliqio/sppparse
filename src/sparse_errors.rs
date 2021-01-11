@@ -8,6 +8,8 @@ pub enum SparseError {
     NoDistantFile,
     #[error("Cannot add that file to the state, it already exists")]
     AlreadyExistsInState,
+    #[error("Cannot change the base path because it's already set")]
+    ChangingExistingBasePath,
     #[error("File not in state")]
     NotInState,
     #[error("The extension `{0:?}` is not parsable. (.json, .yaml, .yml are allowed)")]
