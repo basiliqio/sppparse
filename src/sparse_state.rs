@@ -1,7 +1,6 @@
 use super::*;
 use getset::{CopyGetters, Getters};
 use rand::Rng;
-use std::borrow::BorrowMut;
 use std::fs;
 use std::io::Seek;
 use std::io::SeekFrom;
@@ -34,7 +33,7 @@ impl SparseStateFile {
     /// Replace the [Value](serde_json::Value) of the [SparseStateFile](crate::SparseStateFile) and increment its version.
     pub fn replace(&mut self, val: Value) {
         self.val = val;
-        self.version = self.version + 1;
+        self.version += 1;
     }
 }
 
@@ -64,7 +63,7 @@ impl<'a> SparseState<'a> {
             base_path: None,
             _l: PhantomData::default(),
         };
-        (*obj.map.clone())
+        (*obj.map)
             .borrow_mut()
             .insert(None, RefCell::new(SparseStateFile::new(val)));
         obj
@@ -72,7 +71,7 @@ impl<'a> SparseState<'a> {
 
     /// Get the [Value](serde_json::Value) of a file from the state, it it exists
     pub fn get_val(&self, s: &Option<PathBuf>) -> Option<RefCell<SparseStateFile>> {
-        self.map.borrow().get(s).map(|x| x.clone())
+        self.map.borrow().get(s).cloned()
     }
 
     /// Get a reference to the state's map
@@ -150,7 +149,7 @@ impl<'a> SparseState<'a> {
                 true => serde_json::to_string_pretty(state_file.borrow().val())?,
                 false => serde_json::to_string(state_file.borrow().val())?,
             };
-            file.write(val.as_bytes())?;
+            file.write_all(val.as_bytes())?;
             file.set_len(val.len() as u64)?;
         }
         Ok(())

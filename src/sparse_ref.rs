@@ -3,6 +3,17 @@ use std::borrow::Borrow;
 use std::cell::Ref;
 use std::fs;
 
+/// # SparseRef
+///
+/// [SparseRef](SparseRef) is a dynamic structure that'll will lazily render a JSON pointer.
+///
+/// It uses a [SparseState](crate::SparseState) to render itself in order to limit the IO calls
+/// at a minimum. It will lazily deserialize into the desired type.
+///
+/// If the [SparseStateFile](crate::SparseStateFile)
+/// used to render the object changes, [SparseRef](SparseRef)
+/// will deserialize it again in order to always be up to date.
+///
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct SparseRef<S: Serialize + for<'a> Deserialize<'a>> {
     /// The value deserialized value, if any
@@ -58,7 +69,7 @@ where
     /// Parse the raw pointer
     pub fn parse_pointer(&self) -> (Option<PathBuf>, String) {
         let mut pointer_str: String = self.raw_pointer.clone();
-        let hash_pos: Option<usize> = pointer_str.find("#");
+        let hash_pos: Option<usize> = pointer_str.find('#');
         let pfile: Option<PathBuf>;
         let pointer_path_str: String;
 
@@ -77,7 +88,7 @@ where
             },
             None => {
                 pfile = None;
-                pointer_path_str = pointer_str.clone();
+                pointer_path_str = pointer_str;
             }
         };
         (pfile, pointer_path_str)
@@ -153,7 +164,7 @@ where
                         .borrow()
                         .val()
                         .pointer(pointer.as_str())
-                        .ok_or(SparseError::UnkownPath(pointer.clone()))?
+                        .ok_or_else(|| SparseError::UnkownPath(pointer.clone()))?
                         .clone(),
                 )?;
                 self.val.replace(Some(nval));

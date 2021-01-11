@@ -12,6 +12,7 @@ build_and_test_rust:
     - export NAME=sparse
   script:
     - cargo fmt -- --check
+    - cargo clippy -- -D warnings
     - cargo build --all-targets
     - for file in $(find target/debug/deps -executable -name "$(basename $NAME)-*"); do mkdir -p "target/cov/$(basename $file)"; kcov "target/cov/$(basename $file)" --exclude-pattern=/.cargo,/usr/lib $file ; done
   after_script:
