@@ -1,3 +1,5 @@
+image: rustdocker/rustfmt:stable
+
 stages:
   - test
 
@@ -7,4 +9,4 @@ build_and_test_rust:
     - cargo build --all-targets
     - for file in $(find target/debug/deps -executable -name "$(basename iqiper_mocker)-*"); do kcov target/kcov --exclude-pattern=/.cargo $file ; done
   after_script:
-    - bash <(curl -s https://codecov.io/bash)
+    - bash <(curl -s https://codecov.io/bash) -t $CODECOV_TOKEN
