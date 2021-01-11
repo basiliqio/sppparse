@@ -17,7 +17,3 @@ use std::convert::From;
 use std::fs::File;
 use std::path::PathBuf;
 use std::rc::Rc;
-
-fn main() {
-    println!("Hello, world!");
-}

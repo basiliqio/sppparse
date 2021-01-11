@@ -1,22 +1,25 @@
 use super::*;
 use std::borrow::Borrow;
 use std::cell::Ref;
-use std::collections::hash_map::DefaultHasher;
 use std::fs;
-use std::hash::Hash;
-use std::hash::Hasher;
-use std::marker::PhantomData;
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct SparseRef<S: Serialize + for<'a> Deserialize<'a>> {
+    /// The value deserialized value, if any
     #[serde(skip)]
     val: RefCell<Option<S>>,
+    /// The last version the deserialized value, if any. If that version
+    /// mismatch with the one in [SparseState](crate::SparseState), it will force [SparseRef](crate::SparseRef) to parse
+    /// the value again to update it.
     #[serde(skip)]
     last_version: RefCell<Option<u64>>,
+    /// The parent file path, if not in-memory
     #[serde(skip)]
     pfile_path: RefCell<Option<PathBuf>>,
+    /// The pointer string, as it is set in the original Value
     #[serde(rename = "$ref")]
     raw_pointer: String,
+    /// The parsed pointer, if any
     #[serde(skip)]
     pointer: RefCell<Option<String>>,
 }
@@ -25,6 +28,7 @@ impl<S> SparseRef<S>
 where
     S: Serialize + DeserializeOwned,
 {
+    /// Parse the raw pointer if it's not done already
     fn parse_pointer_if_uninitialized(&self) -> (Ref<Option<PathBuf>>, Ref<String>) {
         match self.is_pointer_parsed() {
             true => (),
@@ -39,6 +43,7 @@ where
         (pfile_path, pointer)
     }
 
+    /// Check if the pointer has been parsed
     pub fn is_pointer_parsed(&self) -> bool {
         let is_pointer_parsed: bool;
         {
@@ -50,6 +55,7 @@ where
         is_pointer_parsed
     }
 
+    /// Parse the raw pointer
     pub fn parse_pointer(&self) -> (Option<PathBuf>, String) {
         let mut pointer_str: String = self.raw_pointer.clone();
         let hash_pos: Option<usize> = pointer_str.find("#");
@@ -77,6 +83,7 @@ where
         (pfile, pointer_path_str)
     }
 
+    /// Get the file path, if any, the pointer reference.
     fn get_pfile_path(&self, state: &SparseState) -> Result<Option<PathBuf>, SparseError> {
         let (pfile_path, _pointer) = self.parse_pointer_if_uninitialized();
         let path: Option<PathBuf> = match &*pfile_path {
@@ -95,6 +102,7 @@ where
         Ok(path)
     }
 
+    /// Get a reference to the deserialized value of the pointer
     pub fn get(&self, state: &SparseState) -> Result<Ref<S>, SparseError> {
         let pfile_path = self.get_pfile_path(state)?;
         let self_val = self.val.borrow();
@@ -123,6 +131,7 @@ where
         }
     }
 
+    /// Get the deserialized value of the pointed value from the [SparseStateFile](crate::SparseStateFile)
     fn get_val(&self, state_file: &SparseStateFile) -> Result<Ref<S>, SparseError> {
         let (_pfile_path, pointer) = self.parse_pointer_if_uninitialized();
 
@@ -153,10 +162,12 @@ where
         }
     }
 
+    /// The pointer, if it has been parsed
     pub fn pointer(&self) -> Ref<'_, Option<String>> {
         self.pointer.borrow()
     }
 
+    /// Create a new [SparseRef](SparseRef) from a raw pointer
     pub fn new(raw_pointer: String) -> Self {
         let res = SparseRef {
             val: RefCell::new(None),
@@ -168,6 +179,8 @@ where
         res.parse_pointer();
         res
     }
+
+    /// Get the path to the file reference by the pointer, if it's not a local pointer
     pub fn pfile_path(&self) -> Ref<'_, Option<PathBuf>> {
         self.pfile_path.borrow()
     }
