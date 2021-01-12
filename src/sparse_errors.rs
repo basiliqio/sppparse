@@ -5,6 +5,12 @@ pub enum SparseError {
     /// When the JSON Pointer point to `undefined`
     #[error("The JSON pointer `{0}` is undefined")]
     UnkownPath(String),
+    /// When the value of a pointer has changed
+    #[error("The value pointed by this pointer has changed since the last deserialization")]
+    OutdatedPointer,
+    /// When a [SparseSelector](SparseSelector) is `Null`
+    #[error("An ill formed pointer was dereferenced")]
+    BadPointer,
     /// When the state is not capable of accepting distant file in a pointer
     #[error("Referencing distant file is not possible for local reference")]
     NoDistantFile,

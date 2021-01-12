@@ -20,7 +20,7 @@ fn main() {
             }
         }
     });
-    let state: SparseState = SparseState::new(None); // Not file base, the base path is set to `None`
+    let state: SparseState = SparseState::new(None).unwrap(); // Not file base, the base path is set to `None`
     let parsed_obj: ObjectExampleParsed = state
         .parse(None, json_value)
         .expect("the deserialized object");

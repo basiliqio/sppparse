@@ -1,5 +1,5 @@
 use super::*;
-use getset::{CopyGetters, Getters};
+use getset::{CopyGetters, Getters, MutGetters};
 use rand::Rng;
 use std::fs;
 use std::io::Seek;
@@ -26,7 +26,7 @@ impl SparseStateFile {
         let mut rng = rand::thread_rng();
         SparseStateFile {
             val,
-            version: rng.gen(),
+            version: rng.gen_range(1..std::u64::MAX),
         }
     }
 
@@ -37,46 +37,44 @@ impl SparseStateFile {
     }
 }
 
-#[derive(Debug, Clone)]
-pub struct SparseState<'a> {
+#[derive(Clone, Getters, MutGetters)]
+pub struct SparseState {
     /// A map between the absolute path (if any), of the file and their [SparseStateFile](SparseStateFile)
-    map: Rc<RefCell<HashMap<Option<PathBuf>, RefCell<SparseStateFile>>>>,
+    #[getset(get = "pub", get_mut = "pub")]
+    map_raw: HashMap<Option<PathBuf>, RefCell<SparseStateFile>>,
     /// The path of the file, if it's not in-memory
     base_path: Option<PathBuf>,
-    _l: PhantomData<&'a str>,
 }
 
-impl<'a> SparseState<'a> {
+impl SparseState {
     /// Create a new `SparseState` providing the base path, if any, of the root file.
-    pub fn new(base_path: Option<PathBuf>) -> Self {
-        SparseState {
-            map: Rc::new(RefCell::new(HashMap::new())),
+    pub fn new(base_path: Option<PathBuf>) -> Result<Self, SparseError> {
+        let mut map: HashMap<Option<PathBuf>, RefCell<SparseStateFile>> = HashMap::new();
+        match base_path.as_ref() {
+            Some(path) => {
+                let file = File::open(path)?;
+                let val: Value = serde_json::from_reader(file)?;
+                let res = RefCell::new(SparseStateFile::new(val));
+                map.insert(None, res.clone());
+                map.insert(Some(path.clone()), res);
+            }
+            None => (),
+        };
+        Ok(SparseState {
+            map_raw: map,
             base_path,
-            _l: PhantomData::default(),
-        }
+        })
     }
 
     /// Create a new in-memory state from a [Value](serde_json::Value)
     pub fn new_local(val: Value) -> Self {
-        let obj = SparseState {
-            map: Rc::new(RefCell::new(HashMap::new())),
+        let mut obj = SparseState {
+            map_raw: HashMap::new(),
             base_path: None,
-            _l: PhantomData::default(),
         };
-        (*obj.map)
-            .borrow_mut()
+        obj.map_raw
             .insert(None, RefCell::new(SparseStateFile::new(val)));
         obj
-    }
-
-    /// Get the [Value](serde_json::Value) of a file from the state, it it exists
-    pub fn get_val(&self, s: &Option<PathBuf>) -> Option<RefCell<SparseStateFile>> {
-        self.map.borrow().get(s).cloned()
-    }
-
-    /// Get a reference to the state's map
-    pub fn get_map(&self) -> Rc<RefCell<HashMap<Option<PathBuf>, RefCell<SparseStateFile>>>> {
-        self.map.clone()
     }
 
     /// Get the base path of the state, if any
@@ -84,22 +82,33 @@ impl<'a> SparseState<'a> {
         &self.base_path
     }
 
+    /// Deserialize the root document from the state to the type S
+    pub fn parse_root<S: DeserializeOwned>(&self) -> Result<S, SparseError> {
+        Ok(serde_json::from_value::<S>(
+            self.map_raw
+                .get(&None)
+                .ok_or(SparseError::NotInState)?
+                .borrow()
+                .val()
+                .clone(),
+        )?)
+    }
+
     /// Deserialize a file from the state to the type S
     pub fn parse<S: DeserializeOwned>(
-        &self,
+        &mut self,
         path: Option<PathBuf>,
         value: Value,
     ) -> Result<S, SparseError> {
         let val: S = serde_json::from_value(value.clone())?;
-        (*self.map)
-            .borrow_mut()
+        self.map_raw
             .insert(path, RefCell::new(SparseStateFile::new(value)));
         Ok(val)
     }
 
-    /// Add a file to the state and provides its [Value](serde_json::Value) immediatly, it fails if that files already exists
-    pub fn add_file(&self, path: PathBuf, val: Value) -> Result<(), SparseError> {
-        let mut map = self.map.as_ref().borrow_mut();
+    pub fn add_file(&mut self, path: PathBuf) -> Result<(), SparseError> {
+        let file = File::open(path.as_path())?;
+        let val: Value = serde_json::from_reader(file)?;
         let npath: PathBuf = match path.is_absolute() {
             true => path,
             false => {
@@ -113,10 +122,11 @@ impl<'a> SparseState<'a> {
             }
         };
 
-        if map.contains_key(&Some(npath.clone())) {
+        if self.map_raw.contains_key(&Some(npath.clone())) {
             return Err(SparseError::AlreadyExistsInState);
         }
-        map.insert(Some(npath), RefCell::new(SparseStateFile::new(val)));
+        self.map_raw
+            .insert(Some(npath), RefCell::new(SparseStateFile::new(val)));
         Ok(())
     }
 
@@ -135,10 +145,9 @@ impl<'a> SparseState<'a> {
     /// It'll try not to modify anything until it's sure it can open every file
     /// for writing
     pub fn save_to_disk(&self, pretty: bool) -> Result<(), SparseError> {
-        let map = self.map.borrow();
         let mut files: Vec<(File, &RefCell<SparseStateFile>)> = Vec::new();
 
-        for (path_buf, val) in map.iter() {
+        for (path_buf, val) in self.map_raw.iter() {
             let path = path_buf.as_ref().ok_or(SparseError::NoDistantFile)?;
             let mut file = fs::OpenOptions::new().append(true).open(path)?;
             file.seek(SeekFrom::Start(0))?;

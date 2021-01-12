@@ -26,6 +26,13 @@
 //! Now, let's parse it using the [SparseSelector](crate::SparseSelector) :
 //!
 //! ```rust
+//! extern crate sparse;
+//!
+//! use serde::Deserialize;
+//! use sparse::{SparseSelector, SparseState};
+//! use std::collections::HashMap;
+//! use std::path::PathBuf;
+//!
 //! #[derive(Debug, Deserialize)]
 //! struct ObjectExampleParsed {
 //!     hello: String,
@@ -34,14 +41,10 @@
 //!
 //! fn main() {
 //!     let state: SparseState =
-//!         SparseState::new(Some(PathBuf::from("./examples/selector.json")));
-//!     let file: File =
-//!         File::open("./examples/selector.json").expect("Can't open the example json");
-//!     let json_val: Value = serde_json::from_reader(file).expect("Should parse the example json");
-//!
+//!         SparseState::new(Some(PathBuf::from("./examples/selector.json"))).unwrap();
 //!     let val: ObjectExampleParsed = state
-//!         .parse(None, json_val)
-//! 		.expect("to parse and add to state");
+//!         .parse_root()
+//! 		.expect("to parse the root document");
 //!
 //!     println!(
 //!         "{}",
@@ -81,10 +84,17 @@
 //! We could use a [SparseRef](crate::SparseRef) to lazily dereference the `#/hello` pointer
 //!
 //! ```rust
+//! extern crate sparse;
+//!
+//! use serde::Deserialize;
+//! use serde_json::json;
+//! use sparse::{SparseRef, SparseState};
+//! use std::collections::HashMap;
+//!
 //! #[derive(Debug, Deserialize)]
 //! struct ObjectExampleParsed {
 //!     hello: String,
-//!     obj: HashMap<String, SparseRef>,
+//!     obj: HashMap<String, SparseRef<String>>,
 //! }
 //!
 //! fn main() {
@@ -96,7 +106,7 @@
 //!             }
 //!         }
 //!     });
-//!     let state: SparseState = SparseState::new(None); // Not file base, the base path is set to `None`
+//!     let state: SparseState = SparseState::new(None).unwrap(); // Not file base, the base path is set to `None`
 //!     let parsed_obj: ObjectExampleParsed = state.parse(None, json_value).expect("the deserialized object");
 //!
 //!     println!(
@@ -116,6 +126,13 @@
 //! the rust code would like the following :
 //!
 //! ```rust
+//! extern crate sparse;
+//!
+//! use serde::Deserialize;
+//! use sparse::{SparseRef, SparseState};
+//! use std::collections::HashMap;
+//! use std::path::PathBuf;
+//!
 //! #[derive(Debug, Deserialize)]
 //! struct ObjectExampleParsed {
 //!     hello: String,
@@ -124,13 +141,10 @@
 //!
 //! fn main() {
 //!     let state: SparseState =
-//!         SparseState::new(Some(PathBuf::from("./examples/read_single_file.json")));
-//!     let file: File =
-//!         File::open("./examples/read_single_file.json").expect("Can't open the example json");
-//!     let json_val: Value = serde_json::from_reader(file).expect("Should parse the example json");
+//!         SparseState::new(Some(PathBuf::from("./examples/read_single_file.json"))).unwrap();
 //!
 //!     let val: ObjectExampleParsed = state
-//!         .parse(None, json_val)
+//!         .parse_root()
 //!         .expect("to parse and add to state");
 //!
 //!     println!(
@@ -149,11 +163,14 @@ pub mod sparse_ref;
 pub mod sparse_selector;
 pub mod sparse_state;
 
+#[cfg(test)]
+pub mod tests;
+
 pub use crate::sparse_errors::SparseError;
 pub use crate::sparse_state::{SparseState, SparseStateFile};
 use serde::{de::DeserializeOwned, Deserialize, Serialize};
 use serde_json::Value;
-pub use sparse_ref::SparseRef;
+pub use sparse_ref::{SparseRef, SparseValue};
 pub use sparse_selector::SparseSelector;
 
 use std::cell::RefCell;

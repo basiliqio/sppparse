@@ -1,7 +1,251 @@
 use super::*;
+use either::Either;
+use getset::{CopyGetters, Getters};
+use rand::RngCore;
 use std::borrow::Borrow;
 use std::cell::Ref;
+use std::default::Default;
 use std::fs;
+
+#[derive(Debug, Clone, Deserialize, Default, Serialize, Getters)]
+pub struct SparseRefRaw<S: DeserializeOwned + Serialize + Default> {
+    /// The value deserialized value, if any
+    #[serde(skip)]
+    #[getset(get = "pub")]
+    val: Box<SparseValue<S>>,
+
+    #[serde(flatten)]
+    #[getset(get = "pub")]
+    utils: SparseRefUtils,
+}
+
+impl<S> SparseRefRaw<S>
+where
+    S: DeserializeOwned + Serialize + Default,
+{
+    fn get_state_file_init<'a>(
+        state: &'a mut SparseState,
+        utils: &SparseRefUtils,
+    ) -> Result<Ref<'a, SparseStateFile>, SparseError> {
+        let pfile_path = utils.get_pfile_path(state)?;
+        let map = state.map_raw();
+        let state_file_exists = state.map_raw().get(&pfile_path).is_some();
+        let state_file = match state_file_exists {
+            true => state
+                .map_raw()
+                .get(&pfile_path)
+                .ok_or(SparseError::BadPointer)?,
+            false => {
+                state.add_file(pfile_path.clone().ok_or(SparseError::BadPointer)?)?;
+                state
+                    .map_raw()
+                    .get(&pfile_path)
+                    .ok_or(SparseError::BadPointer)?
+            }
+        };
+        let state_file_borrow: Ref<'a, SparseStateFile> = state_file.borrow();
+        Ok(state_file_borrow)
+    }
+
+    fn get_state_file<'a>(
+        &self,
+        state: &'a SparseState,
+    ) -> Result<Ref<'a, SparseStateFile>, SparseError> {
+        let pfile_path = self.utils.get_pfile_path(state)?;
+        let map = state.map_raw();
+        let state_file = map.get(&pfile_path);
+        Ok(state_file.ok_or(SparseError::NoDistantFile)?.borrow())
+    }
+
+    fn init_val(
+        state: &mut SparseState,
+        utils: &SparseRefUtils,
+    ) -> Result<SparseValue<S>, SparseError> {
+        let state_file = SparseRefRaw::<S>::get_state_file_init(state, utils)?;
+
+        let val: SparseValue<S> = serde_json::from_value(
+            state_file
+                .val()
+                .pointer(utils.pointer())
+                .ok_or_else(|| SparseError::UnkownPath(utils.pointer().clone()))?
+                .clone(),
+        )?;
+        Ok(val)
+    }
+
+    pub fn check_version<'a>(&'a self, state: &SparseState) -> Result<(), SparseError> {
+        let state_file = self.get_state_file(state)?;
+
+        match state_file.version() == self.utils.version {
+            true => Ok(()),
+            false => Err(SparseError::OutdatedPointer),
+        }
+    }
+
+    pub fn get<'a>(&'a self, state: &'a SparseState) -> Result<&'a S, SparseError> {
+        self.check_version(state)?;
+        Ok(self.val.get(state)?)
+    }
+
+    pub fn new(state: &mut SparseState, raw_ptr: String) -> Result<Self, SparseError> {
+        let utils = SparseRefUtils::new(raw_ptr);
+        let val: Box<SparseValue<S>> = Box::new(SparseRefRaw::init_val(state, &utils)?);
+        Ok(SparseRefRaw { val, utils })
+    }
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, Default, Getters, CopyGetters)]
+pub struct SparseRefUtils {
+    /// The last version the deserialized value, if any. If that version
+    /// mismatch with the one in [SparseState](crate::SparseState), it will force [SparseRef](crate::SparseRef) to parse
+    /// the value again to update it.
+    #[serde(skip)]
+    #[getset(get_copy = "pub")]
+    version: u64,
+    /// The parent file path, if not in-memory
+    #[serde(skip)]
+    #[getset(get = "pub")]
+    pfile_path: Option<PathBuf>,
+    /// The pointer string, as it is set in the original Value
+    #[serde(rename = "$ref")]
+    #[getset(get = "pub")]
+    raw_pointer: String,
+    /// The parsed pointer, if any
+    #[serde(skip)]
+    #[getset(get = "pub")]
+    pointer: String,
+}
+
+impl SparseRefUtils {
+    /// Parse the raw pointer
+    fn parse_pointer(raw_pointer: &String) -> (Option<PathBuf>, String) {
+        let mut raw_pointer = raw_pointer.clone();
+        let hash_pos: Option<usize> = raw_pointer.find('#');
+        let pfile: Option<PathBuf>;
+        let mut pointer_path_str: String;
+
+        match hash_pos {
+            Some(pos) => match pos {
+                0 => {
+                    pfile = None;
+                    pointer_path_str = (&raw_pointer[1..raw_pointer.len()]).to_string();
+                }
+                _ => {
+                    let old_len = raw_pointer.len();
+                    pointer_path_str =
+                        (&(raw_pointer.split_off(pos))[1..(old_len - pos)]).to_string();
+                    pfile = Some(PathBuf::from(raw_pointer.as_str()));
+                }
+            },
+            None => {
+                pfile = None;
+                pointer_path_str = raw_pointer;
+            }
+        };
+        if pointer_path_str.len() > 0 && pointer_path_str.as_bytes()[0] == ('/' as u8) {
+            pointer_path_str.insert(0, '/');
+        } else if pointer_path_str.len() == 0 {
+            pointer_path_str.push('/');
+        }
+        (pfile, pointer_path_str)
+    }
+
+    /// Get the file path, if any, the pointer reference.
+    pub fn get_pfile_path(&self, state: &SparseState) -> Result<Option<PathBuf>, SparseError> {
+        let path: Option<PathBuf> = match &self.pfile_path {
+            Some(pfile_path) => {
+                match state.get_base_path().clone() {
+                    Some(mut path) => {
+                        path.pop(); // Remove the file name
+                        path.push(pfile_path.as_path());
+                        Some(fs::canonicalize(path)?)
+                    }
+                    None => return Err(SparseError::NoDistantFile),
+                }
+            }
+            None => None,
+        };
+        Ok(path)
+    }
+
+    pub fn new(raw_ptr: String) -> Self {
+        let (pfile_path, pointer) = SparseRefUtils::parse_pointer(&raw_ptr);
+        let version = 0;
+        SparseRefUtils {
+            raw_pointer: raw_ptr,
+            pointer,
+            pfile_path,
+            version,
+        }
+    }
+}
+
+#[derive(Debug, Clone, Deserialize, Serialize)]
+#[serde(bound = "S: DeserializeOwned + Serialize + Default")]
+#[serde(untagged)]
+pub enum SparseValue<S: DeserializeOwned + Serialize + Default> {
+    Ref(SparseRefRaw<S>),
+    Obj(S),
+    Null,
+}
+
+impl<S> std::default::Default for SparseValue<S>
+where
+    S: DeserializeOwned + Serialize + Default,
+{
+    fn default() -> Self {
+        SparseValue::Null
+    }
+}
+
+impl<S> SparseValue<S>
+where
+    S: DeserializeOwned + Serialize + Default,
+{
+    pub fn check_version<'a>(&'a self, state: &'a mut SparseState) -> Result<(), SparseError> {
+        match self {
+            SparseValue::Ref(x) => Ok(x.check_version(state)?),
+            SparseValue::Obj(x) => Ok(()),
+            SparseValue::Null => Err(SparseError::BadPointer),
+        }
+    }
+
+    pub fn get<'a>(&'a self, state: &'a SparseState) -> Result<&'a S, SparseError> {
+        match self {
+            SparseValue::Ref(x) => Ok(x.get(state)?),
+            SparseValue::Obj(x) => Ok(&x),
+            SparseValue::Null => Err(SparseError::BadPointer),
+        }
+    }
+}
+
+// impl<S> SparseValue<S>
+// where
+//     S: Serialize + DeserializeOwned + Default,
+// {
+//     pub fn new_nested(guard_parent: Ref<Box<SparseSelector<S>>>, curr_borrow: &RefCell<S>) -> Self {
+//         SparseValue {
+//             guard_parent: Some(guard_parent),
+//             curr_borrow,
+//         }
+// 	}
+
+// 	pub fn new(curr_borrow: &RefCell<S>) -> Self {
+//         SparseValue {
+//             guard_parent: None,
+//             curr_borrow,
+//         }
+//     }
+// }
+
+// impl<S> Default for SparseRefInternal<S>
+// where
+//     S: Serialize + DeserializeOwned + Default,
+// {
+//     fn default() -> Self {
+//         SparseRefInternal::None
+//     }
+// }
 
 /// # SparseRef
 ///
@@ -14,185 +258,45 @@ use std::fs;
 /// used to render the object changes, [SparseRef](SparseRef)
 /// will deserialize it again in order to always be up to date.
 ///
-#[derive(Debug, Clone, Serialize, Deserialize, Default)]
-pub struct SparseRef<S: Serialize + for<'a> Deserialize<'a>> {
-    /// The value deserialized value, if any
+#[derive(Debug, Clone, Serialize, Deserialize, Default, Getters)]
+#[serde(bound = "S: Serialize + DeserializeOwned + Default")]
+pub struct SparseRef<S: DeserializeOwned + Serialize + Default> {
     #[serde(skip)]
-    val: RefCell<Option<S>>,
-    /// The last version the deserialized value, if any. If that version
-    /// mismatch with the one in [SparseState](crate::SparseState), it will force [SparseRef](crate::SparseRef) to parse
-    /// the value again to update it.
-    #[serde(skip)]
-    last_version: RefCell<Option<u64>>,
-    /// The parent file path, if not in-memory
-    #[serde(skip)]
-    pfile_path: RefCell<Option<PathBuf>>,
-    /// The pointer string, as it is set in the original Value
+    #[getset(get)]
+    val: RefCell<SparseValue<S>>,
     #[serde(rename = "$ref")]
     raw_pointer: String,
-    /// The parsed pointer, if any
-    #[serde(skip)]
-    pointer: RefCell<Option<String>>,
 }
 
 impl<S> SparseRef<S>
 where
-    S: Serialize + DeserializeOwned,
+    S: Serialize + DeserializeOwned + Default,
 {
-    /// Parse the raw pointer if it's not done already
-    fn parse_pointer_if_uninitialized(&self) -> (Ref<Option<PathBuf>>, Ref<String>) {
-        match self.is_pointer_parsed() {
-            true => (),
-            false => {
-                let (pfile_path, pointer) = self.parse_pointer();
-                self.pfile_path.replace(pfile_path);
-                self.pointer.replace(Some(pointer));
+    pub fn init_val(&self, state: &mut SparseState) -> Result<(), SparseError> {
+        let val = self.val.borrow();
+
+        match &*val {
+            SparseValue::Null => {
+                drop(val);
+                let mut val = self.val.borrow_mut();
+                *val = SparseValue::Ref(SparseRefRaw::new(state, self.raw_pointer.clone())?);
+                Ok(())
             }
-        };
-        let pointer = Ref::map(self.pointer(), |x| x.as_ref().unwrap());
-        let pfile_path = self.pfile_path();
-        (pfile_path, pointer)
-    }
-
-    /// Check if the pointer has been parsed
-    pub fn is_pointer_parsed(&self) -> bool {
-        let is_pointer_parsed: bool;
-        {
-            is_pointer_parsed = match &*self.pointer.borrow() {
-                Some(_x) => true,
-                None => false,
-            };
-        }
-        is_pointer_parsed
-    }
-
-    /// Parse the raw pointer
-    pub fn parse_pointer(&self) -> (Option<PathBuf>, String) {
-        let mut pointer_str: String = self.raw_pointer.clone();
-        let hash_pos: Option<usize> = pointer_str.find('#');
-        let pfile: Option<PathBuf>;
-        let pointer_path_str: String;
-
-        match hash_pos {
-            Some(pos) => match pos {
-                0 => {
-                    pfile = None;
-                    pointer_path_str = (&pointer_str[1..pointer_str.len()]).to_string();
-                }
-                _ => {
-                    let old_len = pointer_str.len();
-                    pointer_path_str =
-                        (&(pointer_str.split_off(pos))[1..(old_len - pos)]).to_string();
-                    pfile = Some(PathBuf::from(pointer_str.as_str()));
-                }
-            },
-            None => {
-                pfile = None;
-                pointer_path_str = pointer_str;
-            }
-        };
-        (pfile, pointer_path_str)
-    }
-
-    /// Get the file path, if any, the pointer reference.
-    fn get_pfile_path(&self, state: &SparseState) -> Result<Option<PathBuf>, SparseError> {
-        let (pfile_path, _pointer) = self.parse_pointer_if_uninitialized();
-        let path: Option<PathBuf> = match &*pfile_path {
-            Some(pfile_path) => {
-                match state.get_base_path().clone() {
-                    Some(mut path) => {
-                        path.pop(); // Remove the file name
-                        path.push(pfile_path.as_path());
-                        Some(fs::canonicalize(path)?)
-                    }
-                    None => None,
-                }
-            }
-            None => None,
-        };
-        Ok(path)
-    }
-
-    /// Get a reference to the deserialized value of the pointer
-    pub fn get(&self, state: &SparseState) -> Result<Ref<S>, SparseError> {
-        let pfile_path = self.get_pfile_path(state)?;
-        let self_val = self.val.borrow();
-
-        match &*self_val {
-            Some(_x) => Ok(Ref::map(self_val, |x| x.as_ref().unwrap())),
-            None => {
-                drop(self_val); // Free the borrow
-                let state_file = state.get_val(&pfile_path);
-                match state_file {
-                    Some(state_file) => Ok(self.get_val(&state_file.borrow())?),
-                    None => {
-                        let path = pfile_path.as_ref().ok_or(SparseError::NoDistantFile)?;
-                        let file: File = File::open(path.as_path())?;
-                        let json_val: Value = serde_json::from_reader(file)?;
-                        {
-                            state.get_map().borrow_mut().insert(
-                                Some(path.clone()),
-                                RefCell::new(SparseStateFile::new(json_val)),
-                            );
-                        }
-                        Ok(self.get(state)?)
-                    }
-                }
-            }
+            _ => Ok(()),
         }
     }
 
-    /// Get the deserialized value of the pointed value from the [SparseStateFile](crate::SparseStateFile)
-    fn get_val(&self, state_file: &SparseStateFile) -> Result<Ref<S>, SparseError> {
-        let (_pfile_path, pointer) = self.parse_pointer_if_uninitialized();
+    pub fn check_version(&self, state: &mut SparseState) -> Result<(), SparseError> {
+        let val = self.val.borrow();
 
-        let res: bool = match *self.last_version.borrow() {
-            Some(last_version) => {
-                let state_val = state_file.borrow();
-                match state_val.val().pointer(pointer.as_str()) {
-                    Some(_v) => state_val.version() != last_version,
-                    None => false,
-                }
-            }
-            None => false,
-        };
-        match res {
-            true => Ok(Ref::map(self.val.borrow(), |x| x.as_ref().unwrap())),
-            false => {
-                let nval: S = serde_json::from_value::<S>(
-                    state_file
-                        .borrow()
-                        .val()
-                        .pointer(pointer.as_str())
-                        .ok_or_else(|| SparseError::UnkownPath(pointer.clone()))?
-                        .clone(),
-                )?;
-                self.val.replace(Some(nval));
-                Ok(Ref::map(self.val.borrow(), |x| x.as_ref().unwrap()))
-            }
-        }
+        Ok(val.check_version(state)?)
     }
 
-    /// The pointer, if it has been parsed
-    pub fn pointer(&self) -> Ref<'_, Option<String>> {
-        self.pointer.borrow()
-    }
-
-    /// Create a new [SparseRef](SparseRef) from a raw pointer
-    pub fn new(raw_pointer: String) -> Self {
-        let res = SparseRef {
-            val: RefCell::new(None),
-            last_version: RefCell::new(None),
-            pointer: RefCell::new(None),
-            pfile_path: RefCell::new(None),
-            raw_pointer,
-        };
-        res.parse_pointer();
-        res
-    }
-
-    /// Get the path to the file reference by the pointer, if it's not a local pointer
-    pub fn pfile_path(&self) -> Ref<'_, Option<PathBuf>> {
-        self.pfile_path.borrow()
+    pub fn get<'a>(
+        &'a self,
+        state: &'a mut SparseState,
+    ) -> Result<Ref<'a, SparseValue<S>>, SparseError> {
+        self.check_version(state)?;
+        Ok(self.val().borrow())
     }
 }
