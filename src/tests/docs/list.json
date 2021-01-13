@@ -1,0 +1,15 @@
+{
+    "list": [
+        "world",
+        "universe"
+    ],
+    "key1": {
+        "$ref": "./list.json#/list/1"
+	},
+	"key2": {
+        "$ref": "./simple.json#/hello"
+	},
+	"key3": {
+        "$ref": "./simple.json#/key1"
+    }
+}

@@ -170,7 +170,7 @@ pub use crate::sparse_errors::SparseError;
 pub use crate::sparse_state::{SparseState, SparseStateFile};
 use serde::{de::DeserializeOwned, Deserialize, Serialize};
 use serde_json::Value;
-pub use sparse_ref::{SparseRef, SparseValue};
+pub use sparse_ref::{SparseRef, SparseRefRaw, SparseRefUtils, SparseValue};
 pub use sparse_selector::SparseSelector;
 
 use std::cell::RefCell;

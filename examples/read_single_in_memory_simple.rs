@@ -20,8 +20,8 @@ fn main() {
             }
         }
     });
-    let state: SparseState = SparseState::new(None).unwrap(); // Not file base, the base path is set to `None`
-    let parsed_obj: ObjectExampleParsed = state
+    let mut state: SparseState = SparseState::new(None).unwrap(); // Not file base, the base path is set to `None`
+    let mut parsed_obj: ObjectExampleParsed = state
         .parse(None, json_value)
         .expect("the deserialized object");
 
@@ -29,9 +29,9 @@ fn main() {
         "{}",
         parsed_obj
             .obj
-            .get("key1")
+            .get_mut("key1")
             .unwrap()
-            .get(&state)
+            .get(&mut state)
             .expect("the dereferenced pointer")
     );
 }

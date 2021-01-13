@@ -12,25 +12,25 @@ struct ObjectExampleParsed {
 }
 
 fn main() {
-    let state: SparseState =
+    let mut state: SparseState =
         SparseState::new(Some(PathBuf::from("./examples/selector.json"))).unwrap();
-    let val: ObjectExampleParsed = state.parse_root().expect("to parse and add to state");
+    let mut val: ObjectExampleParsed = state.parse_root().expect("to parse and add to state");
 
     println!(
         "{}",
         val.obj
-            .get("key1")
+            .get_mut("key1")
             .unwrap()
-            .get(&state)
+            .get(&mut state)
             .expect("the dereferenced pointer")
     ); // Prints `world`
 
     println!(
         "{}",
         val.obj
-            .get("key2")
+            .get_mut("key2")
             .unwrap()
-            .get(&state)
+            .get(&mut state)
             .expect("the dereferenced pointer")
     ); // Prints `universe`
 }

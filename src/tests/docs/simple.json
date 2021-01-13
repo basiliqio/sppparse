@@ -1,0 +1,6 @@
+{
+    "hello": "world",
+    "key1": {
+        "$ref": "#/hello"
+    }
+}
