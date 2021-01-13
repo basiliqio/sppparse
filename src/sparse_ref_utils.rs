@@ -24,11 +24,8 @@ pub struct SparseRefUtils {
 
 impl SparseRefUtils {
     /// Parse the raw pointer
-    fn parse_pointer(
-        raw_pointer: &String,
-        base_path: Option<PathBuf>,
-    ) -> (Option<PathBuf>, String) {
-        let mut raw_pointer = raw_pointer.clone();
+    fn parse_pointer(raw_pointer: &str, base_path: Option<PathBuf>) -> (Option<PathBuf>, String) {
+        let mut raw_pointer: String = raw_pointer.to_string();
         let hash_pos: Option<usize> = raw_pointer.find('#');
         let mut pfile: Option<PathBuf>;
         let mut pointer_path_str: String;
@@ -50,9 +47,9 @@ impl SparseRefUtils {
                 pointer_path_str = raw_pointer;
             }
         };
-        if pointer_path_str.len() > 0 && pointer_path_str.as_bytes()[0] != ('/' as u8) {
+        if !pointer_path_str.is_empty() && pointer_path_str.as_bytes()[0] != b'/' {
             pointer_path_str.insert(0, '/');
-        } else if pointer_path_str.len() == 0 {
+        } else if !pointer_path_str.is_empty() {
             pointer_path_str.push('/');
         }
 

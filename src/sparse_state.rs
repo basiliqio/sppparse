@@ -49,16 +49,13 @@ impl SparseState {
     /// Create a new `SparseState` providing the base path, if any, of the root file.
     pub fn new(base_path: Option<PathBuf>) -> Result<Self, SparseError> {
         let mut map: HashMap<Option<PathBuf>, RefCell<SparseStateFile>> = HashMap::new();
-        match base_path.as_ref() {
-            Some(path) => {
-                let file = fs::File::open(path)?;
-                let val: Value = serde_json::from_reader(file)?;
-                let res = RefCell::new(SparseStateFile::new(val));
-                map.insert(None, res.clone());
-                map.insert(Some(path.clone()), res);
-            }
-            None => (),
-        };
+        if let Some(path) = base_path.as_ref() {
+            let file = fs::File::open(path)?;
+            let val: Value = serde_json::from_reader(file)?;
+            let res = RefCell::new(SparseStateFile::new(val));
+            map.insert(None, res.clone());
+            map.insert(Some(path.clone()), res);
+        }
         Ok(SparseState {
             map_raw: map,
             base_path,
