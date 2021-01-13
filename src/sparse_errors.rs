@@ -8,7 +8,7 @@ pub enum SparseError {
     /// When the value of a pointer has changed
     #[error("The value pointed by this pointer has changed since the last deserialization")]
     OutdatedPointer,
-    /// When a [SparseSelector](SparseSelector) is `Null`
+    /// When a [SparseSelector](crate::SparseSelector) is `Null`
     #[error("An ill formed pointer was dereferenced")]
     BadPointer,
     /// When the state is not capable of accepting distant file in a pointer

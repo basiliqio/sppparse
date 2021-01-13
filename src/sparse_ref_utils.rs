@@ -87,6 +87,7 @@ impl SparseRefUtils {
         Ok(path)
     }
 
+    /// Create a new [SparseRefUtils](SparseRefUtils)
     pub fn new(raw_ptr: String, path: Option<PathBuf>) -> Self {
         let (pfile_path, pointer) = SparseRefUtils::parse_pointer(&raw_ptr, path);
         let version = 0;

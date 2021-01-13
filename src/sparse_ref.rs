@@ -1,13 +1,23 @@
 use super::*;
 use std::cell::Ref;
 
+/// # A root dynamic ref
+///
+/// [SparseRef](SparseRef) will render dynamically the pointed value.
+///
+/// It uses a [SparseState](crate::SparseState) to render itself in order to limit the IO calls
+/// at a minimum. It will deserialize into the desired type.
+///
+/// If the [SparseStateFile](crate::SparseStateFile)
+/// used to render the object changes, [SparseRef](SparseRef)
+/// will deserialize it again in order to always be up to date.
 #[derive(Debug, Clone, Deserialize, Default, Serialize, Getters)]
 pub struct SparseRef<S: DeserializeOwned + Serialize + Default> {
     /// The value deserialized value, if any
     #[serde(skip)]
     #[getset(get = "pub")]
     val: Box<SparseValue<S>>,
-
+    /// Metadata about the pointer
     #[serde(flatten)]
     #[getset(get = "pub")]
     utils: SparseRefUtils,
@@ -17,6 +27,7 @@ impl<S> SparseRef<S>
 where
     S: DeserializeOwned + Serialize + Default,
 {
+    /// Fetch a reference to the state file from the [SparseState](SparseState)
     fn get_state_file_init<'a>(
         state: &'a mut SparseState,
         utils: &SparseRefUtils,
@@ -40,6 +51,7 @@ where
         Ok(state_file_borrow)
     }
 
+    /// Get the [StateFile](StateFile) resolving the pointing value from the [SparseState](SparseState)
     fn get_state_file<'a>(
         &self,
         state: &'a SparseState,
@@ -50,6 +62,7 @@ where
         Ok(state_file.ok_or(SparseError::NoDistantFile)?.borrow())
     }
 
+    /// Initialize the inner value using the [SparseState](SparseState).
     fn init_val(
         state: &mut SparseState,
         utils: &mut SparseRefUtils,
@@ -74,12 +87,14 @@ where
         Ok(val)
     }
 
+    /// Reset the inner value in case of change, in order to resolve the pointer again
     pub fn self_reset(&mut self, state: &mut SparseState) -> Result<(), SparseError> {
         *self.val = SparseValue::Null;
         *self.val = SparseRef::init_val(state, &mut self.utils)?;
         Ok(())
     }
 
+    /// Check if the version of deserialized value mismatch with the version of the [SparseStateFile](SparseStateFile)
     pub fn check_version<'a>(&'a mut self, state: &'a mut SparseState) -> Result<(), SparseError> {
         let res = self.get_state_file(state)?.version() == self.utils().version();
         if !res {
@@ -88,11 +103,13 @@ where
         Ok(())
     }
 
+    /// Get a reference to the pointed value deserializing it lazily.
     pub fn get<'a>(&'a mut self, state: &'a mut SparseState) -> Result<&'a S, SparseError> {
         self.check_version(state)?;
         Ok(self.val.get(state)?)
     }
 
+    /// Create a new [SparseRef](SparseRef)
     pub fn new(
         state: &mut SparseState,
         path: Option<PathBuf>,
