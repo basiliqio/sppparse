@@ -9,7 +9,7 @@ use std::cell::Ref;
 pub enum SparseSelector<T: Serialize + DeserializeOwned + Default> {
     /// A deserialized JSON pointer contained the pointed value from the local
     /// or distant file
-    Ref(SparseRef<T>),
+    Ref(SparseRefRaw<T>),
     /// The object included in the original document
     Obj(SparseValue<T>),
 

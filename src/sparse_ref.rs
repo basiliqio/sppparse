@@ -8,7 +8,7 @@ use std::default::Default;
 use std::fs;
 
 #[derive(Debug, Clone, Deserialize, Default, Serialize, Getters)]
-pub struct SparseRefRaw<S: DeserializeOwned + Serialize + Default> {
+pub struct SparseRef<S: DeserializeOwned + Serialize + Default> {
     /// The value deserialized value, if any
     #[serde(skip)]
     #[getset(get = "pub")]
@@ -19,7 +19,7 @@ pub struct SparseRefRaw<S: DeserializeOwned + Serialize + Default> {
     utils: SparseRefUtils,
 }
 
-impl<S> SparseRefRaw<S>
+impl<S> SparseRef<S>
 where
     S: DeserializeOwned + Serialize + Default,
 {
@@ -60,7 +60,7 @@ where
         state: &mut SparseState,
         utils: &mut SparseRefUtils,
     ) -> Result<SparseValue<S>, SparseError> {
-        let state_file = SparseRefRaw::<S>::get_state_file_init(state, utils)?;
+        let state_file = SparseRef::<S>::get_state_file_init(state, utils)?;
 
         let mut val: SparseValue<S> = serde_json::from_value(
             state_file
@@ -82,7 +82,7 @@ where
 
     pub fn self_reset(&mut self, state: &mut SparseState) -> Result<(), SparseError> {
         *self.val = SparseValue::Null;
-        *self.val = SparseRefRaw::init_val(state, &mut self.utils)?;
+        *self.val = SparseRef::init_val(state, &mut self.utils)?;
         Ok(())
     }
 
@@ -103,8 +103,8 @@ where
 
     pub fn new(state: &mut SparseState, raw_ptr: String) -> Result<Self, SparseError> {
         let mut utils = SparseRefUtils::new(raw_ptr);
-        let val: Box<SparseValue<S>> = Box::new(SparseRefRaw::init_val(state, &mut utils)?);
-        Ok(SparseRefRaw { val, utils })
+        let val: Box<SparseValue<S>> = Box::new(SparseRef::init_val(state, &mut utils)?);
+        Ok(SparseRef { val, utils })
     }
 
     pub fn new_with_file(
@@ -113,8 +113,8 @@ where
         raw_ptr: String,
     ) -> Result<Self, SparseError> {
         let mut utils = SparseRefUtils::new_with_file(raw_ptr, path);
-        let val: Box<SparseValue<S>> = Box::new(SparseRefRaw::init_val(state, &mut utils)?);
-        Ok(SparseRefRaw { val, utils })
+        let val: Box<SparseValue<S>> = Box::new(SparseRef::init_val(state, &mut utils)?);
+        Ok(SparseRef { val, utils })
     }
 }
 
@@ -239,9 +239,9 @@ impl SparseRefUtils {
 #[serde(bound = "S: DeserializeOwned + Serialize + Default")]
 #[serde(untagged)]
 pub enum SparseValue<S: DeserializeOwned + Serialize + Default> {
-    RefRaw(Box<SparseRef<S>>),
+    RefRaw(Box<SparseRefRaw<S>>),
     Obj(S),
-    Ref(SparseRefRaw<S>),
+    Ref(Box<SparseRef<S>>),
     Null,
 }
 
@@ -335,7 +335,7 @@ where
 ///
 #[derive(Debug, Clone, Serialize, Deserialize, Default, Getters, MutGetters)]
 #[serde(bound = "S: Serialize + DeserializeOwned + Default")]
-pub struct SparseRef<S: DeserializeOwned + Serialize + Default> {
+pub struct SparseRefRaw<S: DeserializeOwned + Serialize + Default> {
     #[serde(skip)]
     #[getset(get, get_mut)]
     val: SparseValue<S>,
@@ -347,7 +347,7 @@ pub struct SparseRef<S: DeserializeOwned + Serialize + Default> {
     base_path: Option<PathBuf>,
 }
 
-impl<S> SparseRef<S>
+impl<S> SparseRefRaw<S>
 where
     S: Serialize + DeserializeOwned + Default,
 {
@@ -355,11 +355,11 @@ where
         match self.val {
             SparseValue::Null => {
                 let val = &mut self.val;
-                *val = SparseValue::Ref(SparseRefRaw::new_with_file(
+                *val = SparseValue::Ref(Box::new(SparseRef::new_with_file(
                     state,
                     self.base_path.clone(),
                     self.raw_pointer.clone(),
-                )?);
+                )?));
                 Ok(())
             }
             _ => Ok(()),

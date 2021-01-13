@@ -6,7 +6,7 @@ use std::str::FromStr;
 fn get_pfile_path_local() {
     let mut state: SparseState = SparseState::new(None).unwrap();
     let r: SparseError =
-        SparseRefRaw::<String>::new(&mut state, "/wefwefwe/fwef/wef/we/wewerf#hello".to_string())
+        SparseRef::<String>::new(&mut state, "/wefwefwe/fwef/wef/we/wewerf#hello".to_string())
             .expect_err("Shouldn't have found the file");
 
     match r {
@@ -24,8 +24,8 @@ fn get_pfile_path_local_no_distant() {
         }
     });
     let mut state: SparseState = SparseState::new_local(val);
-    let r: SparseRefRaw<String> =
-        SparseRefRaw::new(&mut state, "#hello".to_string()).expect("to create the pointer");
+    let r: SparseRef<String> =
+        SparseRef::new(&mut state, "#hello".to_string()).expect("to create the pointer");
 
     assert_eq!(
         r.utils().get_pfile_path(&state).unwrap(),
@@ -40,8 +40,8 @@ fn get_pfile_path_distant_local_ref() {
         PathBuf::from_str("./src/tests/docs/simple.json").unwrap(),
     ))
     .unwrap();
-    let r: SparseRefRaw<String> =
-        SparseRefRaw::new(&mut state, "#hello".to_string()).expect("to create the pointer");
+    let r: SparseRef<String> =
+        SparseRef::new(&mut state, "#hello".to_string()).expect("to create the pointer");
 
     assert_eq!(
         r.utils().get_pfile_path(&state).unwrap(),
@@ -56,8 +56,8 @@ fn get_pfile_path_distant_distant_ref_relative() {
     expected.push("read_single_file.json");
     let mut state: SparseState =
         SparseState::new(Some(PathBuf::from_str("./examples/selector.json").unwrap())).unwrap();
-    let r: SparseRefRaw<String> =
-        SparseRefRaw::new(&mut state, "./read_single_file.json#hello".to_string())
+    let r: SparseRef<String> =
+        SparseRef::new(&mut state, "./read_single_file.json#hello".to_string())
             .expect("to create the pointer");
 
     assert_eq!(
