@@ -5,7 +5,6 @@ use std::fs;
 use std::io::Seek;
 use std::io::SeekFrom;
 use std::io::Write;
-use std::marker::PhantomData;
 use std::path::PathBuf;
 
 #[derive(Debug, Clone, Getters, CopyGetters)]
@@ -52,7 +51,7 @@ impl SparseState {
         let mut map: HashMap<Option<PathBuf>, RefCell<SparseStateFile>> = HashMap::new();
         match base_path.as_ref() {
             Some(path) => {
-                let file = File::open(path)?;
+                let file = fs::File::open(path)?;
                 let val: Value = serde_json::from_reader(file)?;
                 let res = RefCell::new(SparseStateFile::new(val));
                 map.insert(None, res.clone());
@@ -107,7 +106,7 @@ impl SparseState {
     }
 
     pub fn add_file(&mut self, path: PathBuf) -> Result<(), SparseError> {
-        let file = File::open(path.as_path())?;
+        let file = fs::File::open(path.as_path())?;
         let val: Value = serde_json::from_reader(file)?;
         let npath: PathBuf = match path.is_absolute() {
             true => path,
@@ -145,7 +144,7 @@ impl SparseState {
     /// It'll try not to modify anything until it's sure it can open every file
     /// for writing
     pub fn save_to_disk(&self, pretty: bool) -> Result<(), SparseError> {
-        let mut files: Vec<(File, &RefCell<SparseStateFile>)> = Vec::new();
+        let mut files: Vec<(fs::File, &RefCell<SparseStateFile>)> = Vec::new();
 
         for (path_buf, val) in self.map_raw.iter() {
             let path = path_buf.as_ref().ok_or(SparseError::NoDistantFile)?;

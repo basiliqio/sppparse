@@ -158,24 +158,30 @@
 //! }
 //! ```
 
-pub mod sparse_errors;
-pub mod sparse_ref;
-pub mod sparse_selector;
-pub mod sparse_state;
+mod sparse_errors;
+mod sparse_ref;
+mod sparse_ref_raw;
+mod sparse_ref_utils;
+mod sparse_selector;
+mod sparse_state;
+mod sparse_value;
 
 #[cfg(test)]
 pub mod tests;
 
 pub use crate::sparse_errors::SparseError;
 pub use crate::sparse_state::{SparseState, SparseStateFile};
+use getset::{CopyGetters, Getters, MutGetters};
 use serde::{de::DeserializeOwned, Deserialize, Serialize};
 use serde_json::Value;
-pub use sparse_ref::{SparseRef, SparseRefRaw, SparseRefUtils, SparseValue};
+pub use sparse_ref::SparseRef;
+pub use sparse_ref_raw::SparseRefRaw;
+pub use sparse_ref_utils::SparseRefUtils;
 pub use sparse_selector::SparseSelector;
-
+pub use sparse_value::SparseValue;
 use std::cell::RefCell;
 use std::collections::HashMap;
 use std::convert::From;
-use std::fs::File;
+use std::default::Default;
+use std::fs;
 use std::path::PathBuf;
-use std::rc::Rc;

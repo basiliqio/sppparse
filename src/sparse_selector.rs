@@ -1,7 +1,5 @@
 use super::*;
 use serde::{Deserialize, Serialize};
-use std::borrow::Borrow;
-use std::cell::Ref;
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
 #[serde(bound = "T: Serialize + DeserializeOwned + Default")]
@@ -50,22 +48,4 @@ where
             SparseSelector::Null => Err(SparseError::BadPointer),
         }
     }
-
-    // pub fn take(self, state: &SparseState) -> Result<T, SparseError> {
-    //     match &self {
-    //         SparseSelector::Obj(x) => Ok(x.replace(T::default())), // TODO Use take when stabilized
-    //         SparseSelector::Ref(x) => Ok(x.take(&state)?),
-    //         SparseSelector::Null => Err(SparseError::BadPointer),
-    //     }
-    // }
-
-    // pub fn replace(self, other: SparseSelector<T>) -> Result<(), SparseError> {
-    // 	match other
-    // 	{
-    // 		SparseSelector::Null => *self = SparseSelector::Null,
-    // 		SparseSelector::Obj(x) => *self = SparseSelector::Obj(x),
-    // 		SparseSelector::Ref(x) => *self = SparseSelector::Ref(x),
-    // 	}
-    // 	Ok(())
-    // }
 }

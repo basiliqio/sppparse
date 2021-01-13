@@ -1,8 +1,8 @@
 extern crate sparse;
 
 use serde::Deserialize;
-use sparse::sparse_selector::SparseSelector;
-use sparse::sparse_state::SparseState;
+use sparse::SparseSelector;
+use sparse::SparseState;
 use std::collections::HashMap;
 use std::path::PathBuf;
 

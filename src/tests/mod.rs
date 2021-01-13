@@ -1,6 +1,5 @@
 use super::*;
 
-use tempfile::tempfile;
 mod pfile_path;
 mod pointer_parsing;
 mod ref_get_distant;
@@ -20,6 +19,7 @@ pub(super) struct SimpleStruct2 {
 
 #[derive(Deserialize)]
 pub(super) struct SimpleStruct3 {
+    #[allow(dead_code)]
     list: Vec<String>,
     key1: SparseSelector<String>,
     key2: SparseSelector<String>,
