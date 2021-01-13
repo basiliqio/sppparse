@@ -4,11 +4,9 @@
 //!
 //! It can operate on in-memory or on file backed `JSON`.
 //!
-//! ## Using the selector
-//!
-//! If we want an object that can be either a type `T` or a pointer to
+//! To deserialize an object of type `T` or a pointer to
 //! local or distant document referencing an object of type `T`,
-//! we could use the [SparseSelector](crate::SparseSelector).
+//! we use the type [SparseSelector](crate::SparseSelector).
 //!
 //! Let's take the following `JSON` document :
 //! ```json
@@ -40,29 +38,18 @@
 //! }
 //!
 //! fn main() {
-//!     let state: SparseState =
-//!         SparseState::new(Some(PathBuf::from("./examples/selector.json"))).unwrap();
-//!     let val: ObjectExampleParsed = state
-//!         .parse_root()
-//! 		.expect("to parse the root document");
+//!     let mut state: SparseState =
+//!         SparseState::new(Some(PathBuf::from("./examples/read_single_file.json"))).unwrap();
+//!     let mut val: ObjectExampleParsed = state.parse_root().expect("to parse and add to state");
 //!
 //!     println!(
 //!         "{}",
 //!         val.obj
-//!             .get("key1")
+//!             .get_mut("key1")
 //!             .unwrap()
-//!             .get(&state)
+//!             .get(&mut state)
 //!             .expect("the dereferenced pointer")
-//! 	); // Prints `world`
-//!
-//! 	println!(
-//!         "{}",
-//!         val.obj
-//!             .get("key2")
-//!             .unwrap()
-//!             .get(&state)
-//!             .expect("the dereferenced pointer")
-//!     ); // Prints `universe`
+//!     );
 //! }
 //! ```
 //! ## In-memory
@@ -88,13 +75,13 @@
 //!
 //! use serde::Deserialize;
 //! use serde_json::json;
-//! use sparse::{SparseRef, SparseState};
+//! use sparse::{SparseSelector, SparseState};
 //! use std::collections::HashMap;
 //!
 //! #[derive(Debug, Deserialize)]
 //! struct ObjectExampleParsed {
 //!     hello: String,
-//!     obj: HashMap<String, SparseRef<String>>,
+//!     obj: HashMap<String, SparseSelector<String>>,
 //! }
 //!
 //! fn main() {
@@ -106,16 +93,18 @@
 //!             }
 //!         }
 //!     });
-//!     let state: SparseState = SparseState::new(None).unwrap(); // Not file base, the base path is set to `None`
-//!     let parsed_obj: ObjectExampleParsed = state.parse(None, json_value).expect("the deserialized object");
+//!     let mut state: SparseState = SparseState::new(None).unwrap(); // Not file base, the base path is set to `None`
+//!     let mut parsed_obj: ObjectExampleParsed = state
+//!         .parse(None, json_value)
+//!         .expect("the deserialized object");
 //!
 //!     println!(
 //!         "{}",
 //!         parsed_obj
 //!             .obj
-//!             .get("key1")
+//!             .get_mut("key1")
 //!             .unwrap()
-//!             .get(&state)
+//!             .get(&mut state)
 //!             .expect("the dereferenced pointer")
 //!     );
 //! }
@@ -129,30 +118,27 @@
 //! extern crate sparse;
 //!
 //! use serde::Deserialize;
-//! use sparse::{SparseRef, SparseState};
+//! use sparse::{SparseSelector, SparseState};
 //! use std::collections::HashMap;
 //! use std::path::PathBuf;
 //!
 //! #[derive(Debug, Deserialize)]
 //! struct ObjectExampleParsed {
 //!     hello: String,
-//!     obj: HashMap<String, SparseRef<String>>,
+//!     obj: HashMap<String, SparseSelector<String>>,
 //! }
 //!
 //! fn main() {
-//!     let state: SparseState =
+//!     let mut state: SparseState =
 //!         SparseState::new(Some(PathBuf::from("./examples/read_single_file.json"))).unwrap();
-//!
-//!     let val: ObjectExampleParsed = state
-//!         .parse_root()
-//!         .expect("to parse and add to state");
+//!     let mut val: ObjectExampleParsed = state.parse_root().expect("to parse and add to state");
 //!
 //!     println!(
 //!         "{}",
 //!         val.obj
-//!             .get("key1")
+//!             .get_mut("key1")
 //!             .unwrap()
-//!             .get(&state)
+//!             .get(&mut state)
 //!             .expect("the dereferenced pointer")
 //!     );
 //! }

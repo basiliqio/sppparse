@@ -1,14 +1,14 @@
 extern crate sparse;
 
 use serde::Deserialize;
-use sparse::{SparseRef, SparseState};
+use sparse::{SparseSelector, SparseState};
 use std::collections::HashMap;
 use std::path::PathBuf;
 
 #[derive(Debug, Deserialize)]
 struct ObjectExampleParsed {
     hello: String,
-    obj: HashMap<String, SparseRef<String>>,
+    obj: HashMap<String, SparseSelector<String>>,
 }
 
 fn main() {
@@ -16,7 +16,6 @@ fn main() {
         SparseState::new(Some(PathBuf::from("./examples/read_single_file.json"))).unwrap();
     let mut val: ObjectExampleParsed = state.parse_root().expect("to parse and add to state");
 
-    println!("{:#?}", val);
     println!(
         "{}",
         val.obj
@@ -25,5 +24,4 @@ fn main() {
             .get(&mut state)
             .expect("the dereferenced pointer")
     );
-    println!("{:#?}", val);
 }

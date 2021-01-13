@@ -2,13 +2,13 @@ extern crate sparse;
 
 use serde::Deserialize;
 use serde_json::json;
-use sparse::{SparseRef, SparseState};
+use sparse::{SparseSelector, SparseState};
 use std::collections::HashMap;
 
 #[derive(Debug, Deserialize)]
 struct ObjectExampleParsed {
     hello: String,
-    obj: HashMap<String, SparseRef<String>>,
+    obj: HashMap<String, SparseSelector<String>>,
 }
 
 fn main() {
