@@ -49,7 +49,7 @@ impl SparseRefUtils {
         };
         if !pointer_path_str.is_empty() && pointer_path_str.as_bytes()[0] != b'/' {
             pointer_path_str.insert(0, '/');
-        } else if !pointer_path_str.is_empty() {
+        } else if pointer_path_str.is_empty() {
             pointer_path_str.push('/');
         }
 
