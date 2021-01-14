@@ -62,7 +62,7 @@ fn distant_nested() {
 
     let mut parsed: SimpleStruct3 = state.parse_root().unwrap();
 
-    let val: &String = parsed.key3.get(&mut state).unwrap();
+    let val: SparseValue<'_, String> = parsed.key3.get(&mut state).unwrap();
 
     assert_eq!(
         val.as_str(),

@@ -16,7 +16,7 @@ pub struct SparseRef<S: DeserializeOwned + Serialize + Default> {
     /// The value deserialized value, if any
     #[serde(skip)]
     #[getset(get = "pub")]
-    val: Box<SparseValue<S>>,
+    val: Box<SparsePointedValue<S>>,
     /// Metadata about the pointer
     #[serde(flatten)]
     #[getset(get = "pub")]
@@ -31,45 +31,22 @@ where
     fn get_state_file_init<'a>(
         state: &'a mut SparseState,
         utils: &SparseRefUtils,
-    ) -> Result<Ref<'a, SparseStateFile>, SparseError> {
+    ) -> Result<&'a SparseStateFile, SparseError> {
         let pfile_path = utils.get_pfile_path(state)?;
-        let state_file_exists = state.map_raw().get(&pfile_path).is_some();
-        let state_file = match state_file_exists {
-            true => state
-                .map_raw()
-                .get(&pfile_path)
-                .ok_or(SparseError::BadPointer)?,
-            false => {
-                state.add_file(pfile_path.clone().ok_or(SparseError::BadPointer)?)?;
-                state
-                    .map_raw()
-                    .get(&pfile_path)
-                    .ok_or(SparseError::BadPointer)?
-            }
-        };
-        let state_file_borrow: Ref<'a, SparseStateFile> = state_file.borrow();
-        Ok(state_file_borrow)
-    }
-
-    /// Get the [StateFile](StateFile) resolving the pointing value from the [SparseState](SparseState)
-    fn get_state_file<'a>(
-        &self,
-        state: &'a SparseState,
-    ) -> Result<Ref<'a, SparseStateFile>, SparseError> {
-        let pfile_path = self.utils.get_pfile_path(state)?;
-        let map = state.map_raw();
-        let state_file = map.get(&pfile_path);
-        Ok(state_file.ok_or(SparseError::NoDistantFile)?.borrow())
+        if let Some(path) = &pfile_path {
+            state.add_file(path)?;
+        }
+        Ok(state.get_state_file(&pfile_path)?)
     }
 
     /// Initialize the inner value using the [SparseState](SparseState).
     fn init_val(
         state: &mut SparseState,
         utils: &mut SparseRefUtils,
-    ) -> Result<SparseValue<S>, SparseError> {
+    ) -> Result<SparsePointedValue<S>, SparseError> {
         let state_file = SparseRef::<S>::get_state_file_init(state, utils)?;
 
-        let mut val: SparseValue<S> = serde_json::from_value(
+        let mut val: SparsePointedValue<S> = serde_json::from_value(
             state_file
                 .val()
                 .pointer(utils.pointer())
@@ -77,9 +54,9 @@ where
                 .clone(),
         )?;
         val = match val {
-            SparseValue::RefRaw(mut x) => {
+            SparsePointedValue::RefRaw(mut x) => {
                 *x.base_path_mut() = utils.pfile_path().clone();
-                SparseValue::RefRaw(x)
+                SparsePointedValue::RefRaw(x)
             }
             _ => val,
         };
@@ -89,14 +66,17 @@ where
 
     /// Reset the inner value in case of change, in order to resolve the pointer again
     pub fn self_reset(&mut self, state: &mut SparseState) -> Result<(), SparseError> {
-        *self.val = SparseValue::Null;
+        *self.val = SparsePointedValue::Null;
         *self.val = SparseRef::init_val(state, &mut self.utils)?;
         Ok(())
     }
 
     /// Check if the version of deserialized value mismatch with the version of the [SparseStateFile](SparseStateFile)
     pub fn check_version<'a>(&'a mut self, state: &'a mut SparseState) -> Result<(), SparseError> {
-        let res = self.get_state_file(state)?.version() == self.utils().version();
+        let res = state
+            .get_state_file(&self.utils().get_pfile_path(state)?)?
+            .version()
+            == self.utils().version();
         if !res {
             self.self_reset(state)?;
         }
@@ -104,9 +84,20 @@ where
     }
 
     /// Get a reference to the pointed value deserializing it lazily.
-    pub fn get<'a>(&'a mut self, state: &'a mut SparseState) -> Result<&'a S, SparseError> {
+    pub fn get<'a>(
+        &'a mut self,
+        state: &'a mut SparseState,
+    ) -> Result<SparseValue<'a, S>, SparseError> {
         self.check_version(state)?;
-        Ok(self.val.get(state)?)
+        Ok(self.val.get(state, Some(&self.utils))?)
+    }
+
+    pub fn get_mut<'a>(
+        &'a mut self,
+        state: &'a mut SparseState,
+    ) -> Result<SparseValueMut<'a, S>, SparseError> {
+        self.check_version(state)?;
+        Ok(self.val.get_mut(state, Some(&self.utils))?)
     }
 
     /// Create a new [SparseRef](SparseRef)
@@ -116,7 +107,7 @@ where
         raw_ptr: String,
     ) -> Result<Self, SparseError> {
         let mut utils = SparseRefUtils::new(raw_ptr, path);
-        let val: Box<SparseValue<S>> = Box::new(SparseRef::init_val(state, &mut utils)?);
+        let val: Box<SparsePointedValue<S>> = Box::new(SparseRef::init_val(state, &mut utils)?);
         Ok(SparseRef { val, utils })
     }
 }

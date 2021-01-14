@@ -16,7 +16,7 @@ pub struct SparseRefRaw<S: DeserializeOwned + Serialize + Default> {
     /// The inner value
     #[serde(skip)]
     #[getset(get, get_mut)]
-    val: SparseValue<S>,
+    val: SparsePointedValue<S>,
     /// The raw `JSON` pointer, as it is deserialized
     #[serde(rename = "$ref")]
     #[getset(get = "pub")]
@@ -34,9 +34,9 @@ where
     /// Initialize the inner value, from the [SparseState](SparseState)
     pub fn init_val(&mut self, state: &mut SparseState) -> Result<(), SparseError> {
         match self.val {
-            SparseValue::Null => {
+            SparsePointedValue::Null => {
                 let val = &mut self.val;
-                *val = SparseValue::Ref(Box::new(SparseRef::new(
+                *val = SparsePointedValue::Ref(Box::new(SparseRef::new(
                     state,
                     self.base_path.clone(),
                     self.raw_pointer.clone(),
@@ -49,7 +49,7 @@ where
 
     /// Reset the inner value in case of change, to reinitialize the inner value
     fn self_reset(&mut self, state: &mut SparseState) -> Result<(), SparseError> {
-        self.val = SparseValue::Null;
+        self.val = SparsePointedValue::Null;
         Ok(self.init_val(state)?)
     }
 
@@ -62,10 +62,25 @@ where
     }
 
     /// Get the inner value, deserializing the pointed value
-    pub fn get<'a>(&'a mut self, state: &'a mut SparseState) -> Result<&'a S, SparseError> {
+    pub fn get<'a>(
+        &'a mut self,
+        state: &'a mut SparseState,
+        metadata: Option<&'a SparseRefUtils>,
+    ) -> Result<SparseValue<'a, S>, SparseError> {
         self.init_val(state)?;
         self.check_version(state)?;
-        self.val_mut().check_version(state)?;
-        Ok(self.val_mut().get(state)?)
+
+        Ok(self.val_mut().get(state, metadata)?)
+    }
+
+    pub fn get_mut<'a>(
+        &'a mut self,
+        state: &'a mut SparseState,
+        metadata: Option<&'a SparseRefUtils>,
+    ) -> Result<SparseValueMut<'a, S>, SparseError> {
+        self.init_val(state)?;
+        self.check_version(state)?;
+
+        Ok(self.val_mut().get_mut(state, metadata)?)
     }
 }

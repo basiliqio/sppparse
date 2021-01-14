@@ -9,7 +9,7 @@ pub enum SparseSelector<T: Serialize + DeserializeOwned + Default> {
     /// or distant file
     Ref(SparseRefRaw<T>),
     /// The object included in the original document
-    Obj(SparseValue<T>),
+    Obj(SparsePointedValue<T>),
 
     Null,
 }
@@ -29,22 +29,24 @@ where
 {
     /// Get the value this selector is managing, either by deserializing
     /// the pointed value or by directly returning the owned value.
-    pub fn get<'a>(&'a mut self, state: &'a mut SparseState) -> Result<&'a T, SparseError> {
+    pub fn get<'a>(
+        &'a mut self,
+        state: &'a mut SparseState,
+    ) -> Result<SparseValue<'a, T>, SparseError> {
         match self {
-            SparseSelector::Obj(x) => Ok(x.get(state)?),
-            // SparseSelector::Obj(x) => Ok(x.borrow()),
-            SparseSelector::Ref(x) => {
-                Ok(x.get(state)?)
-                // Err(SparseError::BadPointer)
-                // let handle = x.get(&state)?;
-                // let tmp_borrow: &'a T = handle.borrow().get(&state)?;
+            SparseSelector::Obj(x) => Ok(x.get(state, None)?),
+            SparseSelector::Ref(x) => Ok(x.get(state, None)?),
+            SparseSelector::Null => Err(SparseError::BadPointer),
+        }
+    }
 
-                // match &*tmp_borrow
-                // {
-                // 	Result<>
-                // }
-                // Ok(x.get(&state)?.borrow().get(&state)?)
-            }
+    pub fn get_mut<'a>(
+        &'a mut self,
+        state: &'a mut SparseState,
+    ) -> Result<SparseValueMut<'a, T>, SparseError> {
+        match self {
+            SparseSelector::Obj(x) => Ok(x.get_mut(state, None)?),
+            SparseSelector::Ref(x) => Ok(x.get_mut(state, None)?),
             SparseSelector::Null => Err(SparseError::BadPointer),
         }
     }

@@ -14,6 +14,10 @@ pub enum SparseError {
     /// When the state is not capable of accepting distant file in a pointer
     #[error("Referencing distant file is not possible for local reference")]
     NoDistantFile,
+    /// One of the limitation of [Sparse](crate::sparse) is the inability to modify root elements
+    /// from a pointer referencing it.
+    #[error("Sparse cannot mutate a root element via a SparseValue")]
+    MuttatingRoot,
     /// When adding a file to the state but it already exists
     #[error("Cannot add that file to the state, it already exists")]
     AlreadyExistsInState,
