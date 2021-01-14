@@ -3,9 +3,9 @@ use serde::{Deserialize, Serialize};
 use std::any::Any;
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
-#[serde(bound = "T: Serialize + DeserializeOwned + Default")]
+#[serde(bound = "T: DeserializeOwned + Serialize + SparsableTrait")]
 #[serde(untagged)]
-pub enum SparseSelector<T: Any + Serialize + DeserializeOwned + Default + Sparsable> {
+pub enum SparseSelector<T: DeserializeOwned + Serialize + SparsableTrait> {
     /// A deserialized JSON pointer contained the pointed value from the local
     /// or distant file
     Ref(SparseRefRaw<T>),
@@ -15,9 +15,9 @@ pub enum SparseSelector<T: Any + Serialize + DeserializeOwned + Default + Sparsa
     Null,
 }
 
-impl<T> Sparsable for SparseSelector<T>
+impl<T> SparsableTrait for SparseSelector<T>
 where
-    T: Any + Serialize + DeserializeOwned + Default + Sparsable,
+    T: Any + DeserializeOwned + Serialize + SparsableTrait,
 {
     fn sparse_init<'a>(&mut self, state: &mut SparseState) -> Result<(), SparseError> {
         match self {
@@ -30,7 +30,7 @@ where
 
 impl<T> std::default::Default for SparseSelector<T>
 where
-    T: Any + Serialize + DeserializeOwned + Default + Sparsable,
+    T: Any + DeserializeOwned + Serialize + SparsableTrait,
 {
     fn default() -> Self {
         SparseSelector::Null
@@ -39,7 +39,7 @@ where
 
 impl<T> SparseSelector<T>
 where
-    T: Any + Serialize + DeserializeOwned + Default + Sparsable,
+    T: Any + DeserializeOwned + Serialize + SparsableTrait,
 {
     /// Get the value this selector is managing, either by deserializing
     /// the pointed value or by directly returning the owned value.

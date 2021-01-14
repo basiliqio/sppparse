@@ -3,8 +3,6 @@ use std::any::Any;
 use std::collections::*;
 use std::ffi::CString;
 
-trait SparsableRequirement: Any {}
-
 pub trait Sparsable {
     fn sparse_init(&mut self, state: &mut SparseState) -> Result<(), SparseError>;
 }

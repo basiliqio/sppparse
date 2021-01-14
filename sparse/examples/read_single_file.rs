@@ -1,11 +1,11 @@
 extern crate sparse;
 
-use serde::Deserialize;
-use sparse::{SparseSelector, SparseState};
+use serde::{Deserialize, Serialize};
+use sparse::{Sparsable, SparseSelector, SparseState};
 use std::collections::HashMap;
 use std::path::PathBuf;
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, Serialize, Sparsable)]
 struct ObjectExampleParsed {
     hello: String,
     obj: HashMap<String, SparseSelector<String>>,

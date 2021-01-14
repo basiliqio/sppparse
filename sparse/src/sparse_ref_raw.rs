@@ -10,9 +10,9 @@ use super::*;
 /// If the [SparseStateFile](crate::SparseStateFile)
 /// used to render the object changes, [SparseRefRaw](SparseRefRaw)
 /// will deserialize it again in order to always be up to date.
-#[derive(Debug, Clone, Serialize, Deserialize, Default, Getters, MutGetters)]
-#[serde(bound = "S: Serialize + DeserializeOwned + Default")]
-pub struct SparseRefRaw<S: DeserializeOwned + Serialize + Default> {
+#[derive(Debug, Clone, Serialize, Deserialize, Getters, MutGetters)]
+#[serde(bound = "S: DeserializeOwned + Serialize + SparsableTrait")]
+pub struct SparseRefRaw<S: DeserializeOwned + Serialize + SparsableTrait> {
     /// The inner value
     #[serde(skip)]
     #[getset(get, get_mut)]
@@ -27,9 +27,9 @@ pub struct SparseRefRaw<S: DeserializeOwned + Serialize + Default> {
     base_path: Option<PathBuf>,
 }
 
-impl<S> Sparsable for SparseRefRaw<S>
+impl<S> SparsableTrait for SparseRefRaw<S>
 where
-    S: DeserializeOwned + Serialize + Default + Sparsable,
+    S: DeserializeOwned + Serialize + SparsableTrait,
 {
     fn sparse_init<'a>(&mut self, state: &mut SparseState) -> Result<(), SparseError> {
         Ok(self.val.sparse_init(state)?)
@@ -38,18 +38,18 @@ where
 
 impl<S> SparseRefRaw<S>
 where
-    S: Serialize + DeserializeOwned + Default,
+    S: DeserializeOwned + Serialize + SparsableTrait,
 {
     /// Initialize the inner value, from the [SparseState](SparseState)
     pub fn init_val(&mut self, state: &mut SparseState) -> Result<(), SparseError> {
         match self.val {
             SparsePointedValue::Null => {
                 let val = &mut self.val;
-                *val = SparsePointedValue::Ref(Box::new(SparseRef::new(
+                *val = SparsePointedValue::Ref(SparseRef::new(
                     state,
                     self.base_path.clone(),
                     self.raw_pointer.clone(),
-                )?));
+                )?);
                 Ok(())
             }
             _ => Ok(()),

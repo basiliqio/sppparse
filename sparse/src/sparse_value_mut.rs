@@ -3,7 +3,7 @@ use std::fmt::{self, Display};
 use std::ops::{Deref, DerefMut};
 
 #[derive(Debug, Getters, CopyGetters, MutGetters)]
-pub struct SparseValueMut<'a, S: Serialize + DeserializeOwned> {
+pub struct SparseValueMut<'a, S: DeserializeOwned + Serialize + SparsableTrait> {
     #[getset(get_copy = "pub", get_mut = "pub")]
     version: Option<u64>,
     #[getset(get = "pub")]
@@ -15,7 +15,7 @@ pub struct SparseValueMut<'a, S: Serialize + DeserializeOwned> {
 
 impl<'a, S> fmt::Display for SparseValueMut<'a, S>
 where
-    S: Serialize + DeserializeOwned + Display,
+    S: DeserializeOwned + Serialize + SparsableTrait + Display,
 {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "{}", self.sref)
@@ -24,7 +24,7 @@ where
 
 impl<'a, S> Deref for SparseValueMut<'a, S>
 where
-    S: Serialize + DeserializeOwned,
+    S: DeserializeOwned + Serialize + SparsableTrait,
 {
     type Target = S;
 
@@ -35,7 +35,7 @@ where
 
 impl<'a, S> DerefMut for SparseValueMut<'a, S>
 where
-    S: Serialize + DeserializeOwned,
+    S: DeserializeOwned + Serialize + SparsableTrait,
 {
     fn deref_mut(&mut self) -> &mut Self::Target {
         &mut self.sref
@@ -44,7 +44,7 @@ where
 
 impl<'a, S> SparseValueMut<'a, S>
 where
-    S: Serialize + DeserializeOwned,
+    S: DeserializeOwned + Serialize + SparsableTrait,
 {
     pub fn new(sref: &'a mut S, metadata: Option<&'a SparseRefUtils>) -> Self {
         match metadata {

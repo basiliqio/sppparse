@@ -11,8 +11,9 @@ use std::cell::Ref;
 /// If the [SparseStateFile](crate::SparseStateFile)
 /// used to render the object changes, [SparseRef](SparseRef)
 /// will deserialize it again in order to always be up to date.
-#[derive(Debug, Clone, Deserialize, Default, Serialize, Getters)]
-pub struct SparseRef<S: DeserializeOwned + Serialize + Default> {
+#[derive(Debug, Clone, Deserialize, Serialize, Getters)]
+#[serde(bound = "S: DeserializeOwned + Serialize + SparsableTrait")]
+pub struct SparseRef<S: DeserializeOwned + Serialize + SparsableTrait> {
     /// The value deserialized value, if any
     #[serde(skip)]
     #[getset(get = "pub")]
@@ -23,9 +24,9 @@ pub struct SparseRef<S: DeserializeOwned + Serialize + Default> {
     utils: SparseRefUtils,
 }
 
-impl<S> Sparsable for SparseRef<S>
+impl<S> SparsableTrait for SparseRef<S>
 where
-    S: DeserializeOwned + Serialize + Default + Sparsable,
+    S: DeserializeOwned + Serialize + SparsableTrait,
 {
     fn sparse_init(&mut self, state: &mut SparseState) -> Result<(), SparseError> {
         Ok(self.val.sparse_init(state)?)
@@ -34,7 +35,7 @@ where
 
 impl<S> SparseRef<S>
 where
-    S: DeserializeOwned + Serialize + Default,
+    S: DeserializeOwned + Serialize + SparsableTrait,
 {
     /// Fetch a reference to the state file from the [SparseState](SparseState)
     fn get_state_file_init<'a>(

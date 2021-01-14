@@ -1,9 +1,6 @@
 extern crate proc_macro;
 
-use proc_macro::TokenStream;
 use quote::quote;
-use syn;
-use syn::{parse_macro_input, DeriveInput};
 use synstructure::BindStyle;
 
 fn sparsable_derive(mut s: synstructure::Structure) -> proc_macro2::TokenStream {
@@ -15,7 +12,7 @@ fn sparsable_derive(mut s: synstructure::Structure) -> proc_macro2::TokenStream 
 
     s.gen_impl(quote! {
 		extern crate sparse;
-		use sparse::Sparsable as SparsableTrait;
+		use sparse::SparsableTrait;
         gen impl SparsableTrait for @Self {
 			fn sparse_init(&mut self, state: &mut sparse::SparseState) -> Result<(), sparse::SparseError>
 			{

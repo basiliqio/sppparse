@@ -1,18 +1,18 @@
 use super::*;
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
-#[serde(bound = "S: DeserializeOwned + Serialize + Default")]
+#[serde(bound = "S: DeserializeOwned + Serialize + SparsableTrait")]
 #[serde(untagged)]
-pub enum SparsePointedValue<S: DeserializeOwned + Serialize + Default> {
+pub enum SparsePointedValue<S: DeserializeOwned + Serialize + SparsableTrait> {
     RefRaw(Box<SparseRefRaw<S>>),
     Obj(S),
-    Ref(Box<SparseRef<S>>),
+    Ref(SparseRef<S>),
     Null,
 }
 
-impl<S> Sparsable for SparsePointedValue<S>
+impl<S> SparsableTrait for SparsePointedValue<S>
 where
-    S: DeserializeOwned + Serialize + Default + Sparsable,
+    S: DeserializeOwned + Serialize + SparsableTrait,
 {
     fn sparse_init(&mut self, state: &mut SparseState) -> Result<(), SparseError> {
         match self {
@@ -26,7 +26,7 @@ where
 
 impl<S> std::default::Default for SparsePointedValue<S>
 where
-    S: DeserializeOwned + Serialize + Default,
+    S: DeserializeOwned + Serialize + SparsableTrait,
 {
     fn default() -> Self {
         SparsePointedValue::Null
@@ -35,7 +35,7 @@ where
 
 impl<S> SparsePointedValue<S>
 where
-    S: DeserializeOwned + Serialize + Default,
+    S: DeserializeOwned + Serialize + SparsableTrait,
 {
     pub fn check_version<'a>(&'a mut self, state: &'a mut SparseState) -> Result<(), SparseError> {
         match self {
