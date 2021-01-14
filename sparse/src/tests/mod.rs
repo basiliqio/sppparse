@@ -7,12 +7,21 @@ mod ref_get_local;
 mod simple_obj;
 mod updating;
 
+use std::any::Any;
+
 #[derive(Serialize, Deserialize, Default, Getters)]
 pub(super) struct SimpleStruct1 {
     #[getset(get = "pub")]
     hello: String,
     #[getset(get = "pub")]
     key1: SparseSelector<String>,
+}
+
+impl Sparsable for SimpleStruct1 {
+    fn init<'a>(&mut self, state: &mut SparseState) -> Result<(), SparseError> {
+        self.key1.init(state)?;
+        Ok(())
+    }
 }
 
 #[derive(Serialize, Deserialize, Default, Getters)]

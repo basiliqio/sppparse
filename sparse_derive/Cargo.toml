@@ -1,0 +1,15 @@
+[package]
+name = "sparse_derive"
+version = "0.1.0"
+authors = ["Francis Le Roy <francis.leroy@protonmail.ch>"]
+edition = "2018"
+
+[lib]
+proc-macro = true
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+syn = { version = "1.0", features = [ "derive", "parsing" ] }
+quote = "1.0"
+synstructure = "0.12"
+proc-macro2 = "1"

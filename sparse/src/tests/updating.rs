@@ -21,8 +21,8 @@ fn modify_root() {
     let mut parsed: SparseSelector<SimpleStruct1> = state.parse(None, val).unwrap();
 
     assert_eq!(
-        parsed
-            .get(&mut state)
+        *parsed
+            .get_mut(&mut state)
             .unwrap()
             .key1
             .get(&mut state)

@@ -27,6 +27,15 @@ pub struct SparseRefRaw<S: DeserializeOwned + Serialize + Default> {
     base_path: Option<PathBuf>,
 }
 
+impl<S> Sparsable for SparseRefRaw<S>
+where
+    S: DeserializeOwned + Serialize + Default + Sparsable,
+{
+    fn sparse_init<'a>(&mut self, state: &mut SparseState) -> Result<(), SparseError> {
+        Ok(self.val.sparse_init(state)?)
+    }
+}
+
 impl<S> SparseRefRaw<S>
 where
     S: Serialize + DeserializeOwned + Default,

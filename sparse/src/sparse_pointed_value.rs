@@ -10,6 +10,20 @@ pub enum SparsePointedValue<S: DeserializeOwned + Serialize + Default> {
     Null,
 }
 
+impl<S> Sparsable for SparsePointedValue<S>
+where
+    S: DeserializeOwned + Serialize + Default + Sparsable,
+{
+    fn sparse_init(&mut self, state: &mut SparseState) -> Result<(), SparseError> {
+        match self {
+            SparsePointedValue::RefRaw(x) => x.sparse_init(state),
+            SparsePointedValue::Obj(_x) => Ok(()),
+            SparsePointedValue::Ref(x) => x.sparse_init(state),
+            SparsePointedValue::Null => Err(SparseError::BadPointer),
+        }
+    }
+}
+
 impl<S> std::default::Default for SparsePointedValue<S>
 where
     S: DeserializeOwned + Serialize + Default,

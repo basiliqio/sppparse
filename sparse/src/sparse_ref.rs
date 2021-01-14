@@ -23,6 +23,15 @@ pub struct SparseRef<S: DeserializeOwned + Serialize + Default> {
     utils: SparseRefUtils,
 }
 
+impl<S> Sparsable for SparseRef<S>
+where
+    S: DeserializeOwned + Serialize + Default + Sparsable,
+{
+    fn sparse_init(&mut self, state: &mut SparseState) -> Result<(), SparseError> {
+        Ok(self.val.sparse_init(state)?)
+    }
+}
+
 impl<S> SparseRef<S>
 where
     S: DeserializeOwned + Serialize + Default,
