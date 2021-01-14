@@ -20,16 +20,16 @@ fn modify_root() {
     println!("{:#?}", val);
     let mut parsed: SparseSelector<SimpleStruct1> = state.parse(None, val).unwrap();
 
-    assert_eq!(
-        *parsed
-            .get_mut(&mut state)
-            .unwrap()
-            .key1
-            .get(&mut state)
-            .unwrap(),
-        "world".to_string(),
-        "The dereferenced value doesn't match"
-    );
+    // assert_eq!(
+    //     *parsed
+    //         .get_mut(&mut state)
+    //         .unwrap()
+    //         .key1
+    //         .get(&mut state)
+    //         .unwrap(),
+    //     "world".to_string(),
+    //     "The dereferenced value doesn't match"
+    // );
     // let mut sval: SparseValueMut<'_, String> =
     //     parsed.key1.get_mut(&mut state).expect("the 'hello' key");
 

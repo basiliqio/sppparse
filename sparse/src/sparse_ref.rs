@@ -1,5 +1,4 @@
 use super::*;
-use std::cell::Ref;
 
 /// # A root dynamic ref
 ///

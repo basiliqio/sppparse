@@ -1,7 +1,6 @@
 use super::*;
 use getset::{CopyGetters, Getters, MutGetters};
 use rand::Rng;
-use std::cell::Ref;
 use std::fs;
 use std::io::Seek;
 use std::io::SeekFrom;
