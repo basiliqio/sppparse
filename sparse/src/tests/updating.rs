@@ -1,27 +1,31 @@
-// use super::*;
-// use serde_json::json;
+use super::*;
+use serde_json::json;
 
 #[test]
 fn modify_root() {
-    // let val: Value = json!({
-    //     "hello": "world",
-    //     "key1":
-    //     {
-    //         "$ref": "#/hello"
-    //     }
-    // });
+    let val: Value = json!({
+        "hello": "world",
+        "key1":
+        {
+            "$ref": "#/hello"
+        }
+    });
 
-    // let new_val: Value = json!({
-    //     "hello": "world",
-    //     "key1": "toto"
-    // });
-    // let mut state = SparseState::new(None).unwrap();
+    let new_val: Value = json!({
+        "hello": "world",
+        "key1": "toto"
+    });
+    let mut state = SparseState::new(None).unwrap();
 
-    // println!("{:#?}", val);
-    // let parsed: SparseSelector<SimpleStruct1> = state.add_value(None, val).unwrap();
+    println!("{:#?}", val);
+    let mut parsed: SparseSelector<SimpleStruct1> = state.add_value(None, val).unwrap();
 
-    // let
+    let mut val_parsed: SparseValueMut<'_, SimpleStruct1> = parsed.get_mut().unwrap();
+    let mut hello_key: SparseValueMut<'_, String> = val_parsed.key1.get_mut().unwrap();
 
+    *hello_key = String::from("toto");
+
+    hello_key.sparse_save(&mut state).unwrap();
     // assert_eq!(
     //     *parsed
     //         .get_mut(&mut state)

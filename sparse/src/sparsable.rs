@@ -4,6 +4,9 @@ use std::ffi::CString;
 
 pub trait Sparsable {
     fn sparse_init(&mut self, state: &mut SparseState) -> Result<(), SparseError>;
+    fn sparse_updt(&mut self, state: &mut SparseState) -> Result<(), SparseError> {
+        self.sparse_init(state)
+    }
 }
 
 macro_rules! impl_sparsable_nothing {

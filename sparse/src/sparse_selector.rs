@@ -38,13 +38,13 @@ where
     }
 }
 
-impl<T> SparseSelector<T>
+impl<T> SparsePointer<T> for SparseSelector<T>
 where
     T: Any + DeserializeOwned + Serialize + SparsableTrait,
 {
     /// Get the value this selector is managing, either by deserializing
     /// the pointed value or by directly returning the owned value.
-    pub fn check_version<'a>(&'a mut self, state: &'a mut SparseState) -> Result<(), SparseError> {
+    fn check_version<'a>(&'a self, state: &'a SparseState) -> Result<(), SparseError> {
         match self {
             SparseSelector::Obj(x) => Ok(x.check_version(state)?),
             SparseSelector::Ref(x) => Ok(x.check_version(state)?),
@@ -54,21 +54,18 @@ where
 
     /// Get the value this selector is managing, either by deserializing
     /// the pointed value or by directly returning the owned value.
-    pub fn get<'a>(&'a self, state: &'a SparseState) -> Result<SparseValue<'a, T>, SparseError> {
+    fn get<'a>(&'a self) -> Result<SparseValue<'a, T>, SparseError> {
         match self {
-            SparseSelector::Obj(x) => Ok(x.get(state, None)?),
-            SparseSelector::Ref(x) => Ok(x.get(state, None)?),
+            SparseSelector::Obj(x) => Ok(x.get(None)?),
+            SparseSelector::Ref(x) => Ok(x.get(None)?),
             SparseSelector::Null => Err(SparseError::BadPointer),
         }
     }
 
-    pub fn get_mut<'a>(
-        &'a mut self,
-        state: &'a mut SparseState,
-    ) -> Result<SparseValueMut<'a, T>, SparseError> {
+    fn get_mut<'a>(&'a mut self) -> Result<SparseValueMut<'a, T>, SparseError> {
         match self {
-            SparseSelector::Obj(x) => Ok(x.get_mut(state, None)?),
-            SparseSelector::Ref(x) => Ok(x.get_mut(state, None)?),
+            SparseSelector::Obj(x) => Ok(x.get_mut(None)?),
+            SparseSelector::Ref(x) => Ok(x.get_mut(None)?),
             SparseSelector::Null => Err(SparseError::BadPointer),
         }
     }

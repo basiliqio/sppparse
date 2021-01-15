@@ -34,11 +34,11 @@ where
     }
 }
 
-impl<S> SparsePointedValue<S>
+impl<S> SparsePointerRaw<S> for SparsePointedValue<S>
 where
     S: DeserializeOwned + Serialize + SparsableTrait,
 {
-    pub fn check_version<'a>(&'a mut self, state: &'a mut SparseState) -> Result<(), SparseError> {
+    fn check_version<'a>(&'a self, state: &'a SparseState) -> Result<(), SparseError> {
         match self {
             SparsePointedValue::RefRaw(x) => Ok(x.check_version(state)?),
             SparsePointedValue::Ref(x) => Ok(x.check_version(state)?),
@@ -47,29 +47,26 @@ where
         }
     }
 
-    pub fn get<'a>(
+    fn get<'a>(
         &'a self,
-        state: &'a SparseState,
         metadata: Option<&'a SparseRefUtils>,
     ) -> Result<SparseValue<'a, S>, SparseError> {
         match self {
-            SparsePointedValue::Ref(x) => Ok(x.get(state)?),
+            SparsePointedValue::Ref(x) => Ok(x.get()?),
             SparsePointedValue::Obj(x) => Ok(SparseValue::new(x, metadata)),
-            SparsePointedValue::RefRaw(x) => Ok(x.get(state, metadata)?),
+            SparsePointedValue::RefRaw(x) => Ok(x.get(metadata)?),
             SparsePointedValue::Null => Err(SparseError::BadPointer),
         }
     }
 
-    pub fn get_mut<'a>(
+    fn get_mut<'a>(
         &'a mut self,
-        state: &'a mut SparseState,
         metadata: Option<&'a SparseRefUtils>,
     ) -> Result<SparseValueMut<'a, S>, SparseError> {
-        self.check_version(state)?;
         match self {
-            SparsePointedValue::Ref(x) => Ok(x.get_mut(state)?),
+            SparsePointedValue::Ref(x) => Ok(x.get_mut()?),
             SparsePointedValue::Obj(x) => Ok(SparseValueMut::new(&mut *x, metadata)),
-            SparsePointedValue::RefRaw(x) => Ok(x.get_mut(state, metadata)?),
+            SparsePointedValue::RefRaw(x) => Ok(x.get_mut(metadata)?),
             SparsePointedValue::Null => Err(SparseError::BadPointer),
         }
     }

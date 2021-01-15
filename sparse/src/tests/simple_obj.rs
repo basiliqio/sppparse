@@ -13,7 +13,7 @@ fn simple_obj() {
     let parsed: SimpleStruct1 = state.add_value(None, val).unwrap();
 
     assert_eq!(
-        *parsed.key1.get(&mut state).unwrap(),
+        *parsed.key1.get().unwrap(),
         "toto",
         "The dereferenced value doesn't match"
     );

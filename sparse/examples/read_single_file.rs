@@ -1,7 +1,7 @@
 extern crate sparse;
 
 use serde::{Deserialize, Serialize};
-use sparse::{Sparsable, SparseSelector, SparseState};
+use sparse::{Sparsable, SparsePointer, SparseSelector, SparseState};
 use std::collections::HashMap;
 use std::path::PathBuf;
 
@@ -21,7 +21,7 @@ fn main() {
         val.obj
             .get_mut("key1")
             .unwrap()
-            .get(&mut state)
+            .get()
             .expect("the dereferenced pointer")
     );
 }

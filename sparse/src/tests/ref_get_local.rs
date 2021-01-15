@@ -14,7 +14,7 @@ fn simple() {
     let parsed: SimpleStruct1 = state.add_value(None, val).unwrap();
 
     assert_eq!(
-        *parsed.key1.get(&mut state).unwrap(),
+        *parsed.key1.get().unwrap(),
         parsed.hello,
         "The dereferenced value doesn't match"
     );
@@ -33,7 +33,7 @@ fn list() {
     let parsed: SimpleStruct2 = state.add_value(None, val).unwrap();
 
     assert_eq!(
-        *parsed.key1.get(&mut state).unwrap(),
+        *parsed.key1.get().unwrap(),
         parsed.list[1],
         "The dereferenced value doesn't match"
     );

@@ -2,7 +2,7 @@ extern crate sparse;
 
 use serde::{Deserialize, Serialize};
 use serde_json::json;
-use sparse::{Sparsable, SparseSelector, SparseState};
+use sparse::{Sparsable, SparsePointer, SparseSelector, SparseState};
 use std::collections::HashMap;
 
 #[derive(Debug, Deserialize, Serialize, Sparsable)]
@@ -31,7 +31,7 @@ fn main() {
             .obj
             .get_mut("key1")
             .unwrap()
-            .get(&mut state)
+            .get()
             .expect("the dereferenced pointer")
     );
 }

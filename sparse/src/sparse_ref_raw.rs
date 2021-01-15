@@ -32,8 +32,34 @@ where
     S: DeserializeOwned + Serialize + SparsableTrait,
 {
     fn sparse_init<'a>(&mut self, state: &mut SparseState) -> Result<(), SparseError> {
+        self.self_reset(state)?;
         self.check_version(state)?;
         Ok(self.val.sparse_init(state)?)
+    }
+}
+
+impl<S> SparsePointerRaw<S> for SparseRefRaw<S>
+where
+    S: DeserializeOwned + Serialize + SparsableTrait,
+{
+    /// Check that the inner version doesn't mismatch with the [SparseState](SparseState)
+    fn check_version(&self, state: &SparseState) -> Result<(), SparseError> {
+        self.val.check_version(state)
+    }
+
+    /// Get the inner value, deserializing the pointed value
+    fn get<'a>(
+        &'a self,
+        metadata: Option<&'a SparseRefUtils>,
+    ) -> Result<SparseValue<'a, S>, SparseError> {
+        Ok(self.val().get(metadata)?)
+    }
+
+    fn get_mut<'a>(
+        &'a mut self,
+        metadata: Option<&'a SparseRefUtils>,
+    ) -> Result<SparseValueMut<'a, S>, SparseError> {
+        Ok(self.val_mut().get_mut(metadata)?)
     }
 }
 
@@ -61,34 +87,5 @@ where
     fn self_reset(&mut self, state: &mut SparseState) -> Result<(), SparseError> {
         self.val = SparsePointedValue::Null;
         Ok(self.init_val(state)?)
-    }
-
-    /// Check that the inner version doesn't mismatch with the [SparseState](SparseState)
-    pub fn check_version(&mut self, state: &mut SparseState) -> Result<(), SparseError> {
-        self.init_val(state)?;
-        match self.val.check_version(state) {
-            Err(SparseError::OutdatedPointer) => Ok(self.self_reset(state)?),
-            _ => Ok(()),
-        }
-    }
-
-    /// Get the inner value, deserializing the pointed value
-    pub fn get<'a>(
-        &'a self,
-        state: &'a SparseState,
-        metadata: Option<&'a SparseRefUtils>,
-    ) -> Result<SparseValue<'a, S>, SparseError> {
-        Ok(self.val().get(state, metadata)?)
-    }
-
-    pub fn get_mut<'a>(
-        &'a mut self,
-        state: &'a mut SparseState,
-        metadata: Option<&'a SparseRefUtils>,
-    ) -> Result<SparseValueMut<'a, S>, SparseError> {
-        self.init_val(state)?;
-        self.check_version(state)?;
-
-        Ok(self.val_mut().get_mut(state, metadata)?)
     }
 }

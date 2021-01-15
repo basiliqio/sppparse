@@ -10,7 +10,7 @@ fn simple() {
     let mut parsed: SimpleStruct1 = state.parse_root().unwrap();
     <SimpleStruct1 as SparsableTrait>::sparse_init(&mut parsed, &mut state).unwrap();
     assert_eq!(
-        *parsed.key1.get(&mut state).unwrap(),
+        *parsed.key1.get().unwrap(),
         parsed.hello,
         "The dereferenced value doesn't match"
     );
@@ -25,7 +25,7 @@ fn distant_self() {
 
     let parsed: SimpleStruct3 = state.parse_root().unwrap();
 
-    let val = parsed.key1.get(&mut state).unwrap();
+    let val = parsed.key1.get().unwrap();
 
     assert_eq!(
         val.as_str(),
@@ -43,7 +43,7 @@ fn distant_other() {
 
     let parsed: SimpleStruct3 = state.parse_root().unwrap();
 
-    let val = parsed.key2.get(&mut state).unwrap();
+    let val = parsed.key2.get().unwrap();
 
     assert_eq!(
         val.as_str(),
@@ -61,7 +61,7 @@ fn distant_nested() {
 
     let parsed: SimpleStruct3 = state.parse_root().unwrap();
 
-    let val: SparseValue<'_, String> = parsed.key3.get(&mut state).unwrap();
+    let val: SparseValue<'_, String> = parsed.key3.get().unwrap();
 
     assert_eq!(
         val.as_str(),

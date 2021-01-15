@@ -28,8 +28,36 @@ where
     S: DeserializeOwned + Serialize + SparsableTrait,
 {
     fn sparse_init(&mut self, state: &mut SparseState) -> Result<(), SparseError> {
+        self.self_reset(state)?;
         self.check_version(state)?;
         Ok(self.val.sparse_init(state)?)
+    }
+}
+
+impl<S> SparsePointer<S> for SparseRef<S>
+where
+    S: DeserializeOwned + Serialize + SparsableTrait,
+{
+    /// Check if the version of deserialized value mismatch with the version of the [SparseStateFile](SparseStateFile)
+    fn check_version<'a>(&'a self, state: &'a SparseState) -> Result<(), SparseError> {
+        let res = state
+            .get_state_file(&self.utils().get_pfile_path(state)?)?
+            .version()
+            == self.utils().version();
+        if !res {
+            Err(SparseError::OutdatedPointer)
+        } else {
+            Ok(())
+        }
+    }
+
+    /// Get a reference to the pointed value deserializing it lazily.
+    fn get<'a>(&'a self) -> Result<SparseValue<'a, S>, SparseError> {
+        Ok(self.val.get(Some(&self.utils))?)
+    }
+
+    fn get_mut<'a>(&'a mut self) -> Result<SparseValueMut<'a, S>, SparseError> {
+        Ok(self.val.get_mut(Some(&self.utils))?)
     }
 }
 
@@ -79,31 +107,6 @@ where
         *self.val = SparsePointedValue::Null;
         *self.val = SparseRef::init_val(state, &mut self.utils)?;
         Ok(())
-    }
-
-    /// Check if the version of deserialized value mismatch with the version of the [SparseStateFile](SparseStateFile)
-    pub fn check_version<'a>(&'a mut self, state: &'a mut SparseState) -> Result<(), SparseError> {
-        let res = state
-            .get_state_file(&self.utils().get_pfile_path(state)?)?
-            .version()
-            == self.utils().version();
-        if !res {
-            self.self_reset(state)?;
-        }
-        Ok(())
-    }
-
-    /// Get a reference to the pointed value deserializing it lazily.
-    pub fn get<'a>(&'a self, state: &'a SparseState) -> Result<SparseValue<'a, S>, SparseError> {
-        Ok(self.val.get(state, Some(&self.utils))?)
-    }
-
-    pub fn get_mut<'a>(
-        &'a mut self,
-        state: &'a mut SparseState,
-    ) -> Result<SparseValueMut<'a, S>, SparseError> {
-        self.check_version(state)?;
-        Ok(self.val.get_mut(state, Some(&self.utils))?)
     }
 
     /// Create a new [SparseRef](SparseRef)
