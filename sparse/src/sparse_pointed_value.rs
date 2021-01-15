@@ -15,6 +15,7 @@ where
     S: DeserializeOwned + Serialize + SparsableTrait,
 {
     fn sparse_init(&mut self, state: &mut SparseState) -> Result<(), SparseError> {
+        self.check_version(state)?;
         match self {
             SparsePointedValue::RefRaw(x) => x.sparse_init(state),
             SparsePointedValue::Obj(_x) => Ok(()),
@@ -47,14 +48,13 @@ where
     }
 
     pub fn get<'a>(
-        &'a mut self,
-        state: &'a mut SparseState,
+        &'a self,
+        state: &'a SparseState,
         metadata: Option<&'a SparseRefUtils>,
     ) -> Result<SparseValue<'a, S>, SparseError> {
-        self.check_version(state)?;
         match self {
             SparsePointedValue::Ref(x) => Ok(x.get(state)?),
-            SparsePointedValue::Obj(x) => Ok(SparseValue::new(&mut *x, metadata)),
+            SparsePointedValue::Obj(x) => Ok(SparseValue::new(x, metadata)),
             SparsePointedValue::RefRaw(x) => Ok(x.get(state, metadata)?),
             SparsePointedValue::Null => Err(SparseError::BadPointer),
         }

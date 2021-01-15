@@ -3,13 +3,12 @@ use std::str::FromStr;
 
 #[test]
 fn simple() {
-    let mut state = SparseState::new(Some(
-        PathBuf::from_str("./src/tests/docs/simple.json").unwrap(),
-    ))
-    .unwrap();
+    let mut path = std::env::current_dir().unwrap();
+    path.push(PathBuf::from_str("./src/tests/docs/simple.json").unwrap());
+    let mut state = SparseState::new(Some(path)).unwrap();
 
     let mut parsed: SimpleStruct1 = state.parse_root().unwrap();
-
+    <SimpleStruct1 as SparsableTrait>::sparse_init(&mut parsed, &mut state).unwrap();
     assert_eq!(
         *parsed.key1.get(&mut state).unwrap(),
         parsed.hello,
@@ -24,7 +23,7 @@ fn distant_self() {
     ))
     .unwrap();
 
-    let mut parsed: SimpleStruct3 = state.parse_root().unwrap();
+    let parsed: SimpleStruct3 = state.parse_root().unwrap();
 
     let val = parsed.key1.get(&mut state).unwrap();
 
@@ -42,7 +41,7 @@ fn distant_other() {
     ))
     .unwrap();
 
-    let mut parsed: SimpleStruct3 = state.parse_root().unwrap();
+    let parsed: SimpleStruct3 = state.parse_root().unwrap();
 
     let val = parsed.key2.get(&mut state).unwrap();
 
@@ -60,7 +59,7 @@ fn distant_nested() {
     ))
     .unwrap();
 
-    let mut parsed: SimpleStruct3 = state.parse_root().unwrap();
+    let parsed: SimpleStruct3 = state.parse_root().unwrap();
 
     let val: SparseValue<'_, String> = parsed.key3.get(&mut state).unwrap();
 

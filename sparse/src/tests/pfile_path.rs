@@ -26,7 +26,8 @@ fn get_pfile_path_local_no_distant() {
             "$ref": "#/hello"
         }
     });
-    let mut state: SparseState = SparseState::new_local(val);
+    let mut state: SparseState = SparseState::new(None).unwrap();
+    state.add_file_from_memory(None, val).unwrap();
     let r: SparseRef<String> =
         SparseRef::new(&mut state, None, "#hello".to_string()).expect("to create the pointer");
 

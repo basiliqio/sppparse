@@ -28,6 +28,7 @@ where
     S: DeserializeOwned + Serialize + SparsableTrait,
 {
     fn sparse_init(&mut self, state: &mut SparseState) -> Result<(), SparseError> {
+        self.check_version(state)?;
         Ok(self.val.sparse_init(state)?)
     }
 }
@@ -93,11 +94,7 @@ where
     }
 
     /// Get a reference to the pointed value deserializing it lazily.
-    pub fn get<'a>(
-        &'a mut self,
-        state: &'a mut SparseState,
-    ) -> Result<SparseValue<'a, S>, SparseError> {
-        self.check_version(state)?;
+    pub fn get<'a>(&'a self, state: &'a SparseState) -> Result<SparseValue<'a, S>, SparseError> {
         Ok(self.val.get(state, Some(&self.utils))?)
     }
 

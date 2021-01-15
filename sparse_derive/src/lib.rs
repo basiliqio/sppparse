@@ -7,6 +7,7 @@ fn sparsable_derive(mut s: synstructure::Structure) -> proc_macro2::TokenStream 
     let body = s.bind_with(|_bi| BindStyle::RefMut).each(|bi| {
         quote! {
             #bi.sparse_init(state)?;
+            println!("AAAA");
         }
     });
 

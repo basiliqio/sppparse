@@ -7,9 +7,7 @@ mod ref_get_local;
 mod simple_obj;
 mod updating;
 
-use std::any::Any;
-
-#[derive(Serialize, Deserialize, SparsableInner, Getters)]
+#[derive(Serialize, Deserialize, SparsableInner, Debug, Getters)]
 pub(super) struct SimpleStruct1 {
     #[getset(get = "pub")]
     hello: String,
@@ -17,7 +15,7 @@ pub(super) struct SimpleStruct1 {
     key1: SparseSelector<String>,
 }
 
-#[derive(Serialize, Deserialize, SparsableInner, Getters)]
+#[derive(Serialize, Deserialize, SparsableInner, Debug, Getters)]
 pub(super) struct SimpleStruct2 {
     #[getset(get = "pub")]
     list: Vec<String>,
@@ -25,7 +23,7 @@ pub(super) struct SimpleStruct2 {
     key1: SparseSelector<String>,
 }
 
-#[derive(Serialize, Deserialize, SparsableInner, Getters)]
+#[derive(Serialize, Deserialize, SparsableInner, Debug, Getters)]
 pub(super) struct SimpleStruct3 {
     #[allow(dead_code)]
     #[getset(get = "pub")]

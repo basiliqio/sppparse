@@ -61,16 +61,6 @@ impl SparseState {
         })
     }
 
-    /// Create a new in-memory state from a [Value](serde_json::Value)
-    pub fn new_local(val: Value) -> Self {
-        let mut obj = SparseState {
-            map_raw: HashMap::new(),
-            base_path: None,
-        };
-        obj.map_raw.insert(None, SparseStateFile::new(val));
-        obj
-    }
-
     /// Get the base path of the state, if any
     pub fn get_base_path(&self) -> &Option<PathBuf> {
         &self.base_path
@@ -83,33 +73,70 @@ impl SparseState {
         Ok(self.map_raw.get(path).ok_or(SparseError::NotInState)?)
     }
 
-    pub(crate) fn get_state_file_mut<'a>(
-        &'a mut self,
+    pub(crate) fn get_state_file_mut(
+        &mut self,
         path: Option<PathBuf>,
-    ) -> Result<&'a mut SparseStateFile, SparseError> {
+    ) -> Result<&mut SparseStateFile, SparseError> {
         Ok(self.map_raw.get_mut(&path).ok_or(SparseError::NotInState)?)
     }
 
     /// Deserialize the root document from the state to the type S
-    pub fn parse_root<S: DeserializeOwned>(&self) -> Result<S, SparseError> {
-        Ok(serde_json::from_value::<S>(
+    pub fn parse_root<S: DeserializeOwned + Serialize + SparsableTrait>(
+        &mut self,
+    ) -> Result<S, SparseError> {
+        let mut res: S = serde_json::from_value::<S>(
             self.map_raw
                 .get(&None)
                 .ok_or(SparseError::NotInState)?
                 .val()
                 .clone(),
-        )?)
+        )?;
+        <S as SparsableTrait>::sparse_init(&mut res, self)?;
+        Ok(res)
     }
 
     /// Deserialize a file from the state to the type S
-    pub fn parse<S: DeserializeOwned>(
+    pub fn add_value<S: DeserializeOwned + Serialize + SparsableTrait>(
         &mut self,
         path: Option<PathBuf>,
         value: Value,
     ) -> Result<S, SparseError> {
-        let val: S = serde_json::from_value(value.clone())?;
-        self.map_raw.insert(path, SparseStateFile::new(value));
-        Ok(val)
+        let mut val: S = serde_json::from_value(value.clone())?;
+        self.map_raw
+            .insert(path.clone(), SparseStateFile::new(value));
+        let res = <S as SparsableTrait>::sparse_init(&mut val, self);
+        match res {
+            Ok(()) => Ok(val),
+            Err(err) => {
+                self.map_raw.remove(&path);
+                Err(err)
+            }
+        }
+    }
+
+    /// Deserialize a file from the state to the type S
+    pub fn add_obj<S: DeserializeOwned + Serialize + SparsableTrait>(
+        &mut self,
+        path: Option<PathBuf>,
+        obj: &mut S,
+    ) -> Result<(), SparseError> {
+        let mut obj = obj;
+        <S as SparsableTrait>::sparse_init(&mut obj, self)?;
+        self.map_raw
+            .insert(path, SparseStateFile::new(serde_json::to_value(obj)?));
+        Ok(())
+    }
+
+    pub fn add_file_from_memory(
+        &mut self,
+        npath: Option<PathBuf>,
+        val: Value,
+    ) -> Result<(), SparseError> {
+        if self.map_raw.contains_key(&npath) {
+            return Ok(());
+        }
+        self.map_raw.insert(npath, SparseStateFile::new(val));
+        Ok(())
     }
 
     pub fn add_file(&mut self, path: &PathBuf) -> Result<(), SparseError> {

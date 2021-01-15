@@ -1,11 +1,11 @@
 extern crate sparse;
 
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 use serde_json::json;
-use sparse::{SparseSelector, SparseState};
+use sparse::{Sparsable, SparseSelector, SparseState};
 use std::collections::HashMap;
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, Serialize, Sparsable)]
 struct ObjectExampleParsed {
     hello: String,
     obj: HashMap<String, SparseSelector<String>>,
@@ -22,7 +22,7 @@ fn main() {
     });
     let mut state: SparseState = SparseState::new(None).unwrap(); // Not file base, the base path is set to `None`
     let mut parsed_obj: ObjectExampleParsed = state
-        .parse(None, json_value)
+        .add_value(None, json_value)
         .expect("the deserialized object");
 
     println!(

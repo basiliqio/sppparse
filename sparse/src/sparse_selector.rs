@@ -20,6 +20,7 @@ where
     T: Any + DeserializeOwned + Serialize + SparsableTrait,
 {
     fn sparse_init<'a>(&mut self, state: &mut SparseState) -> Result<(), SparseError> {
+        self.check_version(state)?;
         match self {
             SparseSelector::Ref(x) => Ok(x.sparse_init(state)?),
             SparseSelector::Obj(x) => Ok(x.sparse_init(state)?),
@@ -43,10 +44,17 @@ where
 {
     /// Get the value this selector is managing, either by deserializing
     /// the pointed value or by directly returning the owned value.
-    pub fn get<'a>(
-        &'a mut self,
-        state: &'a mut SparseState,
-    ) -> Result<SparseValue<'a, T>, SparseError> {
+    pub fn check_version<'a>(&'a mut self, state: &'a mut SparseState) -> Result<(), SparseError> {
+        match self {
+            SparseSelector::Obj(x) => Ok(x.check_version(state)?),
+            SparseSelector::Ref(x) => Ok(x.check_version(state)?),
+            SparseSelector::Null => Err(SparseError::BadPointer),
+        }
+    }
+
+    /// Get the value this selector is managing, either by deserializing
+    /// the pointed value or by directly returning the owned value.
+    pub fn get<'a>(&'a self, state: &'a SparseState) -> Result<SparseValue<'a, T>, SparseError> {
         match self {
             SparseSelector::Obj(x) => Ok(x.get(state, None)?),
             SparseSelector::Ref(x) => Ok(x.get(state, None)?),

@@ -10,7 +10,7 @@ fn simple_obj() {
 
     let mut state = SparseState::new(None).unwrap();
 
-    let mut parsed: SimpleStruct1 = state.parse(None, val).unwrap();
+    let parsed: SimpleStruct1 = state.add_value(None, val).unwrap();
 
     assert_eq!(
         *parsed.key1.get(&mut state).unwrap(),
@@ -28,7 +28,7 @@ fn wrong_type() {
 
     let mut state = SparseState::new(None).unwrap();
 
-    let parsed = state.parse::<SimpleStruct1>(None, val);
+    let parsed = state.add_value::<SimpleStruct1>(None, val);
 
     if let Err(SparseError::SerdeJson(_err)) = parsed {
         // Ok

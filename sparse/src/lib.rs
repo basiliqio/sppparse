@@ -26,12 +26,12 @@
 //! ```rust
 //! extern crate sparse;
 //!
-//! use serde::Deserialize;
-//! use sparse::{SparseSelector, SparseState};
+//! use serde::{Deserialize, Serialize};
+//! use sparse::{Sparsable, SparseSelector, SparseState};
 //! use std::collections::HashMap;
 //! use std::path::PathBuf;
 //!
-//! #[derive(Debug, Deserialize)]
+//! #[derive(Debug, Deserialize, Serialize, Sparsable)]
 //! struct ObjectExampleParsed {
 //!     hello: String,
 //!     obj: HashMap<String, SparseSelector<String>>,
@@ -39,16 +39,18 @@
 //!
 //! fn main() {
 //!     let mut state: SparseState =
-//!         SparseState::new(Some(PathBuf::from("./examples/read_single_file.json"))).unwrap();
+//!         SparseState::new(Some(PathBuf::from("./examples/read_multi_files.json"))).unwrap();
 //!     let mut val: ObjectExampleParsed = state.parse_root().expect("to parse and add to state");
+//!     println!("Full object {:#?}", val);
 //!
 //!     println!(
-//!         "{}",
-//!         val.obj
-//!             .get_mut("key1")
-//!             .unwrap()
-//!             .get(&mut state)
-//!             .expect("the dereferenced pointer")
+//!         "A single ref {:#?}",
+//!         val.obj.get_mut("key1").unwrap().get(&mut state)
+//!     );
+//!
+//!     println!(
+//!         "A single ref {:#?}",
+//!         val.obj.get_mut("key2").unwrap().get(&mut state)
 //!     );
 //! }
 //! ```
@@ -73,12 +75,12 @@
 //! ```rust
 //! extern crate sparse;
 //!
-//! use serde::Deserialize;
+//! use serde::{Deserialize, Serialize};
 //! use serde_json::json;
-//! use sparse::{SparseSelector, SparseState};
+//! use sparse::{Sparsable, SparseSelector, SparseState};
 //! use std::collections::HashMap;
 //!
-//! #[derive(Debug, Deserialize)]
+//! #[derive(Debug, Deserialize, Serialize, Sparsable)]
 //! struct ObjectExampleParsed {
 //!     hello: String,
 //!     obj: HashMap<String, SparseSelector<String>>,
@@ -95,7 +97,7 @@
 //!     });
 //!     let mut state: SparseState = SparseState::new(None).unwrap(); // Not file base, the base path is set to `None`
 //!     let mut parsed_obj: ObjectExampleParsed = state
-//!         .parse(None, json_value)
+//!         .add_value(None, json_value)
 //!         .expect("the deserialized object");
 //!
 //!     println!(
@@ -117,12 +119,12 @@
 //! ```rust
 //! extern crate sparse;
 //!
-//! use serde::Deserialize;
-//! use sparse::{SparseSelector, SparseState};
+//! use serde::{Deserialize, Serialize};
+//! use sparse::{Sparsable, SparseSelector, SparseState};
 //! use std::collections::HashMap;
 //! use std::path::PathBuf;
 //!
-//! #[derive(Debug, Deserialize)]
+//! #[derive(Debug, Deserialize, Serialize, Sparsable)]
 //! struct ObjectExampleParsed {
 //!     hello: String,
 //!     obj: HashMap<String, SparseSelector<String>>,
@@ -165,7 +167,6 @@ use serde::{de::DeserializeOwned, Deserialize, Serialize};
 use serde_json::Value;
 pub use sparsable::Sparsable as SparsableTrait;
 pub use sparse_derive::Sparsable;
-pub(crate) use sparse_derive::SparsableInner;
 pub use sparse_pointed_value::SparsePointedValue;
 pub use sparse_ref::SparseRef;
 pub use sparse_ref_raw::SparseRefRaw;
