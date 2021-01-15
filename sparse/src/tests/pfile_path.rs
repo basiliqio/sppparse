@@ -41,7 +41,7 @@ fn get_pfile_path_local_no_distant() {
 #[test]
 fn get_pfile_path_distant_local_ref() {
     let mut state: SparseState = SparseState::new(Some(
-        PathBuf::from_str("./src/tests/docs/simple.json").unwrap(),
+        PathBuf::from_str(sparse_test_rel_path!("./src/tests/docs/simple.json")).unwrap(),
     ))
     .unwrap();
     let r: SparseRef<String> =
@@ -56,10 +56,13 @@ fn get_pfile_path_distant_local_ref() {
 
 #[test]
 fn get_pfile_path_distant_distant_ref_relative() {
-    let mut expected = std::fs::canonicalize(&PathBuf::from("./examples")).unwrap();
+    let mut expected =
+        std::fs::canonicalize(&PathBuf::from(sparse_test_rel_path!("./examples"))).unwrap();
     expected.push("read_single_file.json");
-    let mut state: SparseState =
-        SparseState::new(Some(PathBuf::from_str("./examples/selector.json").unwrap())).unwrap();
+    let mut state: SparseState = SparseState::new(Some(
+        PathBuf::from_str(sparse_test_rel_path!("./examples/selector.json")).unwrap(),
+    ))
+    .unwrap();
     let r: SparseRef<String> = SparseRef::new(
         &mut state,
         None,

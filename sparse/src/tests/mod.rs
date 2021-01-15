@@ -7,6 +7,13 @@ mod ref_get_local;
 mod simple_obj;
 mod updating;
 
+#[macro_export]
+macro_rules! sparse_test_rel_path {
+    ($e:expr) => {
+        concat!(env!("CARGO_MANIFEST_DIR"), "/", $e)
+    };
+}
+
 #[derive(Serialize, Deserialize, SparsableInner, Debug, Getters)]
 pub(super) struct SimpleStruct1 {
     #[getset(get = "pub")]
