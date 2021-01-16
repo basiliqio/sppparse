@@ -67,10 +67,16 @@ where
 
     fn get_mut<'a>(
         &'a mut self,
-        root: Rc<RefCell<SparseState>>,
+        state_cell: Rc<RefCell<SparseState>>,
         metadata: Option<&'a SparseRefUtils>,
     ) -> Result<SparseValueMut<'a, S>, SparseError> {
-        Ok(self.val_mut().get_mut(root, metadata)?)
+        {
+            let state = state_cell
+                .try_borrow()
+                .map_err(|_e| SparseError::StateAlreadyBorrowed)?;
+            self.check_version(&state)?;
+        }
+        Ok(self.val_mut().get_mut(state_cell, metadata)?)
     }
 
     fn self_reset<'a>(

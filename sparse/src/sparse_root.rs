@@ -11,7 +11,7 @@ pub struct SparseRoot<S: Any + DeserializeOwned + Serialize + SparsableTrait> {
     val: S,
     #[getset(get_copy = "pub")]
     version: u64,
-    #[getset(get = "pub(crate)")]
+    #[getset(get = "pub")]
     state: Rc<RefCell<SparseState>>,
 }
 
@@ -46,16 +46,17 @@ where
 
     /// Get the value this selector is managing, either by deserializing
     /// the pointed value or by directly returning the owned value.
-    pub fn get(&self) -> Result<SparseValue<'_, S>, SparseError> {
+    pub fn root_get(&self) -> Result<SparseValue<'_, S>, SparseError> {
         Ok(SparseValue::new_root(&self.val))
     }
 
-    pub fn get_mut(&mut self) -> Result<SparseValueMut<'_, S>, SparseError> {
+    pub fn root_get_mut(&mut self) -> Result<SparseValueMut<'_, S>, SparseError> {
         let state = self.state().clone();
+        self.check_version()?;
         Ok(SparseValueMut::new_root(self.val_mut(), state))
     }
 
-    pub fn self_reset(&mut self) -> Result<(), SparseError> {
+    pub fn root_self_reset(&mut self) -> Result<(), SparseError> {
         {
             let state = self
                 .state
@@ -83,7 +84,7 @@ where
         match vcheck {
             Ok(()) => Ok(()),
             Err(SparseError::OutdatedPointer) => {
-                self.self_reset()?;
+                self.root_self_reset()?;
                 self.sparse_init()
             }
             Err(_) => vcheck,

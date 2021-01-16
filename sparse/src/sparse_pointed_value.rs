@@ -78,6 +78,12 @@ where
         state_cell: Rc<RefCell<SparseState>>,
         metadata: Option<&'a SparseRefUtils>,
     ) -> Result<SparseValueMut<'a, S>, SparseError> {
+        {
+            let state = state_cell
+                .try_borrow()
+                .map_err(|_e| SparseError::StateAlreadyBorrowed)?;
+            self.check_version(&state)?;
+        }
         match self {
             SparsePointedValue::Ref(x) => Ok(x.get_mut(state_cell)?),
             SparsePointedValue::Obj(x) => Ok(SparseValueMut::new(&mut *x, state_cell, metadata)),

@@ -70,6 +70,12 @@ where
         &'a mut self,
         state_cell: Rc<RefCell<SparseState>>,
     ) -> Result<SparseValueMut<'a, S>, SparseError> {
+        {
+            let state = state_cell
+                .try_borrow()
+                .map_err(|_e| SparseError::StateAlreadyBorrowed)?;
+            self.check_version(&state)?;
+        }
         Ok(self.val.get_mut(state_cell, Some(&self.utils))?)
     }
 
