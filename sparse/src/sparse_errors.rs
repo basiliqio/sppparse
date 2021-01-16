@@ -11,6 +11,12 @@ pub enum SparseError {
     /// When a [SparseSelector](crate::SparseSelector) is `Null`
     #[error("An ill formed pointer was dereferenced")]
     BadPointer,
+    /// When the [SparseState](crate::SparseState) has no root file
+    #[error("The state has no root file")]
+    NoRoot,
+    /// Prevent the RefCell from panicking
+    #[error("The inner state is already mutably borrowed elsewhere")]
+    StateAlreadyBorrowed,
     /// When the state is not capable of accepting distant file in a pointer
     #[error("Referencing distant file is not possible for local reference")]
     NoDistantFile,

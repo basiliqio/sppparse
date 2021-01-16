@@ -40,7 +40,7 @@ impl SparseStateFile {
     }
 }
 
-#[derive(Clone, Getters, MutGetters)]
+#[derive(Debug, Clone, Getters, MutGetters)]
 pub struct SparseState {
     /// A map between the absolute path (if any), of the file and their [SparseStateFile](SparseStateFile)
     map_raw: HashMap<Option<PathBuf>, SparseStateFile>,

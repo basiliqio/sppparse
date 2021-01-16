@@ -11,20 +11,19 @@ fn modify_root() {
         }
     });
 
-    let mut state = SparseState::new(None).unwrap();
-
     println!("{:#?}", val);
-    let mut parsed: SparseSelector<SimpleStruct1> = state.add_value(None, val).unwrap();
+    let mut parsed: SparseRoot<SimpleStruct1> = SparseRoot::new_from_value(val).unwrap();
+    let state = parsed.state().clone();
     println!("{:#?}", parsed);
 
     {
         let mut val_parsed: SparseValueMut<'_, SimpleStruct1> = parsed.get_mut().unwrap();
-        let mut hello_key: SparseValueMut<'_, String> = val_parsed.key1.get_mut().unwrap();
+        let mut hello_key: SparseValueMut<'_, String> = val_parsed.key1.get_mut(state).unwrap();
         *hello_key = String::from("toto");
-        hello_key.sparse_save(&mut state).unwrap();
+        hello_key.sparse_save().unwrap();
     }
 
-    parsed.sparse_updt(&mut state).unwrap();
+    parsed.sparse_updt().unwrap();
 
     assert_eq!(
         *parsed.get().unwrap().key1.get().unwrap(),

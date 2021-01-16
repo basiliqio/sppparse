@@ -75,12 +75,13 @@ where
 
     fn get_mut<'a>(
         &'a mut self,
+        state_cell: Rc<RefCell<SparseState>>,
         metadata: Option<&'a SparseRefUtils>,
     ) -> Result<SparseValueMut<'a, S>, SparseError> {
         match self {
-            SparsePointedValue::Ref(x) => Ok(x.get_mut()?),
-            SparsePointedValue::Obj(x) => Ok(SparseValueMut::new(&mut *x, metadata)),
-            SparsePointedValue::RefRaw(x) => Ok(x.get_mut(metadata)?),
+            SparsePointedValue::Ref(x) => Ok(x.get_mut(state_cell)?),
+            SparsePointedValue::Obj(x) => Ok(SparseValueMut::new(&mut *x, state_cell, metadata)),
+            SparsePointedValue::RefRaw(x) => Ok(x.get_mut(state_cell, metadata)?),
             SparsePointedValue::Null => Err(SparseError::BadPointer),
         }
     }

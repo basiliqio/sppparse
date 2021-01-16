@@ -66,8 +66,11 @@ where
         Ok(self.val.get(Some(&self.utils))?)
     }
 
-    fn get_mut<'a>(&'a mut self) -> Result<SparseValueMut<'a, S>, SparseError> {
-        Ok(self.val.get_mut(Some(&self.utils))?)
+    fn get_mut<'a>(
+        &'a mut self,
+        state_cell: Rc<RefCell<SparseState>>,
+    ) -> Result<SparseValueMut<'a, S>, SparseError> {
+        Ok(self.val.get_mut(state_cell, Some(&self.utils))?)
     }
 
     fn self_reset(&mut self, state: &mut SparseState) -> Result<(), SparseError> {

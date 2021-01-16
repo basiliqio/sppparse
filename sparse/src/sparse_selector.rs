@@ -75,10 +75,13 @@ where
         }
     }
 
-    fn get_mut<'a>(&'a mut self) -> Result<SparseValueMut<'a, T>, SparseError> {
+    fn get_mut<'a>(
+        &'a mut self,
+        root: Rc<RefCell<SparseState>>,
+    ) -> Result<SparseValueMut<'a, T>, SparseError> {
         match self {
-            SparseSelector::Obj(x) => Ok(x.get_mut(None)?),
-            SparseSelector::Ref(x) => Ok(x.get_mut(None)?),
+            SparseSelector::Obj(x) => Ok(x.get_mut(root, None)?),
+            SparseSelector::Ref(x) => Ok(x.get_mut(root, None)?),
             SparseSelector::Null => Err(SparseError::BadPointer),
         }
     }

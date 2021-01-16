@@ -10,6 +10,7 @@ pub struct SparseValueMut<'a, S: DeserializeOwned + Serialize + SparsableTrait> 
     path: Option<&'a PathBuf>,
     #[getset(get = "pub")]
     pointer: Option<&'a String>,
+    state_cell: Rc<RefCell<SparseState>>,
     sref: &'a mut S,
 }
 
@@ -46,35 +47,46 @@ impl<'a, S> SparseValueMut<'a, S>
 where
     S: DeserializeOwned + Serialize + SparsableTrait,
 {
-    pub fn new(sref: &'a mut S, metadata: Option<&'a SparseRefUtils>) -> Self {
+    pub fn new(
+        sref: &'a mut S,
+        state_cell: Rc<RefCell<SparseState>>,
+        metadata: Option<&'a SparseRefUtils>,
+    ) -> Self {
         match metadata {
             Some(metadata) => SparseValueMut {
                 sref,
                 version: Some(metadata.version()),
                 path: metadata.pfile_path().as_ref(),
                 pointer: Some(metadata.pointer()),
+                state_cell,
             },
             None => SparseValueMut {
                 sref,
                 version: None,
                 path: None,
                 pointer: None,
+                state_cell,
             },
         }
     }
 
-    pub fn new_root(sref: &'a mut S) -> Self {
+    pub fn new_root(sref: &'a mut S, state_cell: Rc<RefCell<SparseState>>) -> Self {
         SparseValueMut {
             sref,
             version: None,
             path: None,
             pointer: None,
+            state_cell,
         }
     }
 
-    pub fn sparse_save(&self, state: &'a mut SparseState) -> Result<(), SparseError> {
+    pub fn sparse_save(&self) -> Result<(), SparseError> {
         let pointer = self.pointer().ok_or(SparseError::BadPointer)?;
-        let file: &'a mut SparseStateFile = state.get_state_file_mut(self.path().cloned())?;
+        let mut state = self
+            .state_cell
+            .try_borrow_mut()
+            .map_err(|_e| SparseError::StateAlreadyBorrowed)?;
+        let file: &mut SparseStateFile = state.get_state_file_mut(self.path().cloned())?;
         let pointer = file
             .val_mut()
             .pointer_mut(pointer)

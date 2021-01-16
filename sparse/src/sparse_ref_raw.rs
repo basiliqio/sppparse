@@ -67,9 +67,10 @@ where
 
     fn get_mut<'a>(
         &'a mut self,
+        root: Rc<RefCell<SparseState>>,
         metadata: Option<&'a SparseRefUtils>,
     ) -> Result<SparseValueMut<'a, S>, SparseError> {
-        Ok(self.val_mut().get_mut(metadata)?)
+        Ok(self.val_mut().get_mut(root, metadata)?)
     }
 
     fn self_reset<'a>(
