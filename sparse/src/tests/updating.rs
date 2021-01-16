@@ -11,21 +11,33 @@ fn modify_root() {
         }
     });
 
-    let new_val: Value = json!({
-        "hello": "world",
-        "key1": "toto"
-    });
     let mut state = SparseState::new(None).unwrap();
 
     println!("{:#?}", val);
     let mut parsed: SparseSelector<SimpleStruct1> = state.add_value(None, val).unwrap();
+    println!("{:#?}", parsed);
 
-    let mut val_parsed: SparseValueMut<'_, SimpleStruct1> = parsed.get_mut().unwrap();
-    let mut hello_key: SparseValueMut<'_, String> = val_parsed.key1.get_mut().unwrap();
+    {
+        let mut val_parsed: SparseValueMut<'_, SimpleStruct1> = parsed.get_mut().unwrap();
+        let mut hello_key: SparseValueMut<'_, String> = val_parsed.key1.get_mut().unwrap();
+        *hello_key = String::from("toto");
+        hello_key.sparse_save(&mut state).unwrap();
+    }
 
-    *hello_key = String::from("toto");
+    parsed.sparse_updt(&mut state).unwrap();
 
-    hello_key.sparse_save(&mut state).unwrap();
+    assert_eq!(
+        *parsed.get().unwrap().key1.get().unwrap(),
+        "toto".to_string(),
+        "The dereferenced value doesn't match"
+    );
+
+    assert_eq!(
+        *parsed.get().unwrap().hello,
+        "toto".to_string(),
+        "The dereferenced value doesn't match"
+    );
+
     // assert_eq!(
     //     *parsed
     //         .get_mut(&mut state)

@@ -15,12 +15,25 @@ where
     S: DeserializeOwned + Serialize + SparsableTrait,
 {
     fn sparse_init(&mut self, state: &mut SparseState) -> Result<(), SparseError> {
+        self.self_reset(state, None)?;
+        if let SparsePointedValue::Null = self {
+            println!("HERE");
+        }
         self.check_version(state)?;
         match self {
             SparsePointedValue::RefRaw(x) => x.sparse_init(state),
-            SparsePointedValue::Obj(_x) => Ok(()),
+            SparsePointedValue::Obj(x) => x.sparse_init(state),
             SparsePointedValue::Ref(x) => x.sparse_init(state),
             SparsePointedValue::Null => Err(SparseError::BadPointer),
+        }
+    }
+
+    fn sparse_updt<'a>(&mut self, state: &mut SparseState) -> Result<(), SparseError> {
+        let vcheck = self.check_version(state);
+        match vcheck {
+            Ok(()) => Ok(()),
+            Err(SparseError::OutdatedPointer) => self.sparse_init(state),
+            Err(_) => vcheck,
         }
     }
 }
@@ -39,6 +52,7 @@ where
     S: DeserializeOwned + Serialize + SparsableTrait,
 {
     fn check_version<'a>(&'a self, state: &'a SparseState) -> Result<(), SparseError> {
+        println!("PointedValue check_version");
         match self {
             SparsePointedValue::RefRaw(x) => Ok(x.check_version(state)?),
             SparsePointedValue::Ref(x) => Ok(x.check_version(state)?),
@@ -68,6 +82,20 @@ where
             SparsePointedValue::Obj(x) => Ok(SparseValueMut::new(&mut *x, metadata)),
             SparsePointedValue::RefRaw(x) => Ok(x.get_mut(metadata)?),
             SparsePointedValue::Null => Err(SparseError::BadPointer),
+        }
+    }
+
+    fn self_reset<'a>(
+        &mut self,
+        state: &mut SparseState,
+        metadata: Option<&'a SparseRefUtils>,
+    ) -> Result<(), SparseError> {
+        println!("SparsePointedValue self_reset");
+        match self {
+            SparsePointedValue::Ref(x) => Ok(x.self_reset(state)?),
+            SparsePointedValue::Obj(_x) => Ok(()),
+            SparsePointedValue::RefRaw(x) => Ok(x.self_reset(state, metadata)?),
+            SparsePointedValue::Null => Ok(()),
         }
     }
 }

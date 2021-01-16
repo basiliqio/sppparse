@@ -7,10 +7,10 @@ use std::io::SeekFrom;
 use std::io::Write;
 use std::path::PathBuf;
 
-#[derive(Debug, Clone, Getters, CopyGetters)]
+#[derive(Debug, Clone, Getters, MutGetters, CopyGetters)]
 pub struct SparseStateFile {
     /// The value of the file, unparsed.
-    #[getset(get = "pub")]
+    #[getset(get = "pub", get_mut = "pub(crate)")]
     val: Value,
     /// The version of the file. It's a random value that is incremented each time
     /// the original object is modified. It forces the pointing [SparseRef](crate::SparseRef) to update
@@ -29,10 +29,14 @@ impl SparseStateFile {
         }
     }
 
+    pub fn bump_version(&mut self) {
+        self.version += 1;
+    }
+
     /// Replace the [Value](serde_json::Value) of the [SparseStateFile](crate::SparseStateFile) and increment its version.
     pub fn replace(&mut self, val: Value) {
         self.val = val;
-        self.version += 1;
+        self.bump_version();
     }
 }
 

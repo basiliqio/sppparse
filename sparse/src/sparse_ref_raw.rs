@@ -32,9 +32,18 @@ where
     S: DeserializeOwned + Serialize + SparsableTrait,
 {
     fn sparse_init<'a>(&mut self, state: &mut SparseState) -> Result<(), SparseError> {
-        self.self_reset(state)?;
+        self._self_reset(state)?;
         self.check_version(state)?;
         Ok(self.val.sparse_init(state)?)
+    }
+
+    fn sparse_updt<'a>(&mut self, state: &mut SparseState) -> Result<(), SparseError> {
+        let vcheck = self.check_version(state);
+        match vcheck {
+            Ok(()) => Ok(()),
+            Err(SparseError::OutdatedPointer) => self.sparse_init(state),
+            Err(_) => vcheck,
+        }
     }
 }
 
@@ -44,6 +53,7 @@ where
 {
     /// Check that the inner version doesn't mismatch with the [SparseState](SparseState)
     fn check_version(&self, state: &SparseState) -> Result<(), SparseError> {
+        println!("SparseRefRaw check_version");
         self.val.check_version(state)
     }
 
@@ -60,6 +70,15 @@ where
         metadata: Option<&'a SparseRefUtils>,
     ) -> Result<SparseValueMut<'a, S>, SparseError> {
         Ok(self.val_mut().get_mut(metadata)?)
+    }
+
+    fn self_reset<'a>(
+        &mut self,
+        state: &mut SparseState,
+        metadata: Option<&SparseRefUtils>,
+    ) -> Result<(), SparseError> {
+        println!("SparseRefRaw reset");
+        self._self_reset(state)
     }
 }
 
@@ -84,7 +103,7 @@ where
     }
 
     /// Reset the inner value in case of change, to reinitialize the inner value
-    fn self_reset(&mut self, state: &mut SparseState) -> Result<(), SparseError> {
+    fn _self_reset(&mut self, state: &mut SparseState) -> Result<(), SparseError> {
         self.val = SparsePointedValue::Null;
         Ok(self.init_val(state)?)
     }

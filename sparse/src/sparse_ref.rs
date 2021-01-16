@@ -32,6 +32,15 @@ where
         self.check_version(state)?;
         Ok(self.val.sparse_init(state)?)
     }
+
+    fn sparse_updt<'a>(&mut self, state: &mut SparseState) -> Result<(), SparseError> {
+        let vcheck = self.check_version(state);
+        match vcheck {
+            Ok(()) => Ok(()),
+            Err(SparseError::OutdatedPointer) => self.sparse_init(state),
+            Err(_) => vcheck,
+        }
+    }
 }
 
 impl<S> SparsePointer<S> for SparseRef<S>
@@ -40,6 +49,7 @@ where
 {
     /// Check if the version of deserialized value mismatch with the version of the [SparseStateFile](SparseStateFile)
     fn check_version<'a>(&'a self, state: &'a SparseState) -> Result<(), SparseError> {
+        println!("SparseRef check_version");
         let res = state
             .get_state_file(&self.utils().get_pfile_path(state)?)?
             .version()
@@ -58,6 +68,11 @@ where
 
     fn get_mut<'a>(&'a mut self) -> Result<SparseValueMut<'a, S>, SparseError> {
         Ok(self.val.get_mut(Some(&self.utils))?)
+    }
+
+    fn self_reset(&mut self, state: &mut SparseState) -> Result<(), SparseError> {
+        println!("SparseRef reset");
+        self._self_reset(state)
     }
 }
 
@@ -99,11 +114,12 @@ where
             _ => val,
         };
         *utils.version_mut() = state_file.version();
+        val.sparse_init(state)?;
         Ok(val)
     }
 
     /// Reset the inner value in case of change, in order to resolve the pointer again
-    pub fn self_reset(&mut self, state: &mut SparseState) -> Result<(), SparseError> {
+    fn _self_reset(&mut self, state: &mut SparseState) -> Result<(), SparseError> {
         *self.val = SparsePointedValue::Null;
         *self.val = SparseRef::init_val(state, &mut self.utils)?;
         Ok(())

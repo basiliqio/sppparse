@@ -73,11 +73,14 @@ where
     }
 
     pub fn sparse_save(&self, state: &'a mut SparseState) -> Result<(), SparseError> {
-        let file: &'a mut SparseStateFile = state.get_state_file_mut(Some(
-            self.path().ok_or(SparseError::NoDistantFile)?.to_path_buf(),
-        ))?;
-        let nval = serde_json::to_value(&self.sref)?;
-        file.replace(nval);
+        let pointer = self.pointer().ok_or(SparseError::BadPointer)?;
+        let file: &'a mut SparseStateFile = state.get_state_file_mut(self.path().cloned())?;
+        let pointer = file
+            .val_mut()
+            .pointer_mut(pointer)
+            .ok_or(SparseError::UnkownPath(pointer.to_string()))?;
+        *pointer = serde_json::to_value(&self.sref)?;
+        file.bump_version();
         Ok(())
     }
 }

@@ -20,11 +20,24 @@ where
     T: Any + DeserializeOwned + Serialize + SparsableTrait,
 {
     fn sparse_init<'a>(&mut self, state: &mut SparseState) -> Result<(), SparseError> {
+        println!("SparseSelector sparse_init 0");
+        self.self_reset(state)?;
+        println!("SparseSelector sparse_init 1");
         self.check_version(state)?;
+        println!("SparseSelector sparse_init 2");
         match self {
             SparseSelector::Ref(x) => Ok(x.sparse_init(state)?),
             SparseSelector::Obj(x) => Ok(x.sparse_init(state)?),
             SparseSelector::Null => Err(SparseError::BadPointer),
+        }
+    }
+
+    fn sparse_updt<'a>(&mut self, state: &mut SparseState) -> Result<(), SparseError> {
+        let vcheck = self.check_version(state);
+        match vcheck {
+            Ok(()) => Ok(()),
+            Err(SparseError::OutdatedPointer) => self.sparse_init(state),
+            Err(_) => vcheck,
         }
     }
 }
@@ -66,6 +79,15 @@ where
         match self {
             SparseSelector::Obj(x) => Ok(x.get_mut(None)?),
             SparseSelector::Ref(x) => Ok(x.get_mut(None)?),
+            SparseSelector::Null => Err(SparseError::BadPointer),
+        }
+    }
+
+    fn self_reset(&mut self, state: &mut SparseState) -> Result<(), SparseError> {
+        println!("SparseSelector self_reset");
+        match self {
+            SparseSelector::Obj(x) => Ok(x.self_reset(state, None)?),
+            SparseSelector::Ref(x) => Ok(x.self_reset(state, None)?),
             SparseSelector::Null => Err(SparseError::BadPointer),
         }
     }
