@@ -1,6 +1,6 @@
 use super::*;
 use getset::{CopyGetters, Getters, MutGetters};
-use serde::{Deserialize, Serialize};
+use serde::Serialize;
 use std::any::Any;
 use std::cell::RefCell;
 use std::fmt::{self, Display};
@@ -36,7 +36,7 @@ where
             .try_borrow()
             .map_err(|_x| SparseError::StateAlreadyBorrowed)?;
         let root_file: &SparseStateFile = state
-            .get_state_file(&None)
+            .get_state_file(state.get_root_path())
             .map_err(|_e| SparseError::NoRoot)?;
         match root_file.version() == self.version {
             true => Ok(()),
@@ -63,7 +63,7 @@ where
                 .try_borrow()
                 .map_err(|_x| SparseError::StateAlreadyBorrowed)?;
             let root_file: &SparseStateFile = state
-                .get_state_file(&None)
+                .get_state_file(state.get_root_path())
                 .map_err(|_e| SparseError::NoRoot)?;
             *&mut self.val = serde_json::from_value(root_file.val().clone())?;
         }
@@ -92,9 +92,9 @@ where
     }
 
     pub fn new_from_file(path: PathBuf) -> Result<Self, SparseError> {
-        let mut state: SparseState = SparseState::new(Some(path))?;
+        let mut state: SparseState = SparseState::new_from_file(path)?;
         let val: S = state.parse_root()?;
-        let version: u64 = state.get_state_file(&None)?.version();
+        let version: u64 = state.get_state_file(state.get_root_path())?.version();
 
         Ok(SparseRoot {
             val,
@@ -103,10 +103,10 @@ where
         })
     }
 
-    pub fn new_from_value(rval: Value) -> Result<Self, SparseError> {
-        let mut state: SparseState = SparseState::new(None)?;
-        let val: S = state.add_value(None, rval)?;
-        let version: u64 = state.get_state_file(&None)?.version();
+    pub fn new_from_value(rval: Value, path: PathBuf) -> Result<Self, SparseError> {
+        let mut state: SparseState = SparseState::new_from_value(path, rval.clone())?;
+        let version: u64 = state.get_state_file(state.get_root_path())?.version();
+        let val = state.parse_root()?;
 
         Ok(SparseRoot {
             val,
@@ -115,14 +115,14 @@ where
         })
     }
 
-    pub fn new_from_obj(rval: S) -> Result<Self, SparseError> {
-        let mut rval = rval;
-        let mut state: SparseState = SparseState::new(None)?;
-        state.add_obj(None, &mut rval)?;
-        let version: u64 = state.get_state_file(&None)?.version();
+    pub fn new_from_obj(rval: S, path: PathBuf) -> Result<Self, SparseError> {
+        let mut state: SparseState =
+            SparseState::new_from_value(path.clone(), serde_json::to_value(rval)?)?;
+        let val: S = state.parse_file(&path)?;
+        let version: u64 = state.get_state_file(state.get_root_path())?.version();
 
         Ok(SparseRoot {
-            val: rval,
+            val,
             version,
             state: Rc::new(RefCell::new(state)),
         })

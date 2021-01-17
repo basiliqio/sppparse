@@ -12,12 +12,14 @@ struct ObjectExampleParsed {
 }
 
 fn main() {
-    let mut state: SparseState =
-        SparseState::new(Some(PathBuf::from("./examples/read_multi_files.json"))).unwrap();
+    let mut state: SparseState = SparseState::new_from_file(PathBuf::from(concat!(
+        env!("CARGO_MANIFEST_DIR"),
+        "/",
+        "./examples/read_multi_files.json"
+    )))
+    .unwrap();
     let mut val: ObjectExampleParsed = state.parse_root().expect("to parse and add to state");
     println!("Full object {:#?}", val);
-
     println!("A single ref {:#?}", val.obj.get_mut("key1").unwrap().get());
-
     println!("A single ref {:#?}", val.obj.get_mut("key2").unwrap().get());
 }

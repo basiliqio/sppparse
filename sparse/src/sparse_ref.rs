@@ -49,7 +49,6 @@ where
 {
     /// Check if the version of deserialized value mismatch with the version of the [SparseStateFile](SparseStateFile)
     fn check_version<'a>(&'a self, state: &'a SparseState) -> Result<(), SparseError> {
-        println!("SparseRef check_version");
         let res = state
             .get_state_file(&self.utils().get_pfile_path(state)?)?
             .version()
@@ -80,7 +79,6 @@ where
     }
 
     fn self_reset(&mut self, state: &mut SparseState) -> Result<(), SparseError> {
-        println!("SparseRef reset");
         self._self_reset(state)
     }
 }
@@ -94,10 +92,8 @@ where
         state: &'a mut SparseState,
         utils: &SparseRefUtils,
     ) -> Result<&'a SparseStateFile, SparseError> {
-        let pfile_path = utils.get_pfile_path(state)?;
-        if let Some(path) = &pfile_path {
-            state.add_file(path)?;
-        }
+        let pfile_path: PathBuf = utils.get_pfile_path(state)?;
+        state.add_file(&pfile_path)?;
         Ok(state.get_state_file(&pfile_path)?)
     }
 

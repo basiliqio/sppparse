@@ -86,7 +86,11 @@ where
             .state_cell
             .try_borrow_mut()
             .map_err(|_e| SparseError::StateAlreadyBorrowed)?;
-        let file: &mut SparseStateFile = state.get_state_file_mut(self.path().cloned())?;
+        let path: PathBuf = match self.path {
+            Some(x) => x.clone(),
+            None => state.get_root_path().clone(),
+        };
+        let file: &mut SparseStateFile = state.get_state_file_mut(&path)?;
         let pointer = file
             .val_mut()
             .pointer_mut(pointer)

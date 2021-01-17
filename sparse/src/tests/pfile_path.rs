@@ -1,10 +1,12 @@
 use super::*;
+use path_absolutize::*;
 use serde_json::json;
 use std::str::FromStr;
 
 #[test]
 fn get_pfile_path_local() {
-    let mut state: SparseState = SparseState::new(None).unwrap();
+    let mut state: SparseState =
+        SparseState::new_from_value(PathBuf::from_str("hello.json").unwrap(), json!(null)).unwrap();
     let r: SparseError = SparseRef::<String>::new(
         &mut state,
         None,
@@ -26,30 +28,33 @@ fn get_pfile_path_local_no_distant() {
             "$ref": "#/hello"
         }
     });
-    let mut state: SparseState = SparseState::new(None).unwrap();
-    state.add_file_from_memory(None, val).unwrap();
+    let mut state: SparseState =
+        SparseState::new_from_value(PathBuf::from_str("hello.json").unwrap(), val).unwrap();
     let r: SparseRef<String> =
         SparseRef::new(&mut state, None, "#hello".to_string()).expect("to create the pointer");
-
     assert_eq!(
         r.utils().get_pfile_path(&state).unwrap(),
-        None,
+        PathBuf::from_str("hello.json")
+            .unwrap()
+            .absolutize()
+            .unwrap()
+            .to_path_buf(),
         "It should be the local document"
     );
 }
 
 #[test]
 fn get_pfile_path_distant_local_ref() {
-    let mut state: SparseState = SparseState::new(Some(
+    let mut state: SparseState = SparseState::new_from_file(
         PathBuf::from_str(sparse_test_rel_path!("./src/tests/docs/simple.json")).unwrap(),
-    ))
+    )
     .unwrap();
     let r: SparseRef<String> =
         SparseRef::new(&mut state, None, "#hello".to_string()).expect("to create the pointer");
 
     assert_eq!(
         r.utils().get_pfile_path(&state).unwrap(),
-        None,
+        PathBuf::from_str(sparse_test_rel_path!("./src/tests/docs/simple.json")).unwrap(),
         "It should be the root document"
     );
 }
@@ -59,9 +64,9 @@ fn get_pfile_path_distant_distant_ref_relative() {
     let mut expected =
         std::fs::canonicalize(&PathBuf::from(sparse_test_rel_path!("./examples"))).unwrap();
     expected.push("read_single_file.json");
-    let mut state: SparseState = SparseState::new(Some(
+    let mut state: SparseState = SparseState::new_from_file(
         PathBuf::from_str(sparse_test_rel_path!("./examples/selector.json")).unwrap(),
-    ))
+    )
     .unwrap();
     let r: SparseRef<String> = SparseRef::new(
         &mut state,
@@ -72,7 +77,7 @@ fn get_pfile_path_distant_distant_ref_relative() {
 
     assert_eq!(
         r.utils().get_pfile_path(&state).unwrap(),
-        Some(expected),
+        expected,
         "The path mismatch"
     );
 }

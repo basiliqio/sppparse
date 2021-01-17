@@ -67,19 +67,15 @@ impl SparseRefUtils {
     }
 
     /// Get the file path, if any, the pointer reference.
-    pub fn get_pfile_path(&self, state: &SparseState) -> Result<Option<PathBuf>, SparseError> {
-        let path: Option<PathBuf> = match &self.pfile_path {
+    pub fn get_pfile_path(&self, state: &SparseState) -> Result<PathBuf, SparseError> {
+        let path: PathBuf = match &self.pfile_path {
             Some(pfile_path) => {
-                match state.get_base_path().clone() {
-                    Some(mut path) => {
-                        path.pop(); // Remove the file name
-                        path.push(pfile_path.as_path());
-                        Some(fs::canonicalize(path)?)
-                    }
-                    None => return Err(SparseError::NoDistantFile),
-                }
+                let mut path = state.get_root_path().clone();
+                path.pop(); // Remove the file name
+                path.push(pfile_path.as_path());
+                path.absolutize()?.to_path_buf()
             }
-            None => None,
+            None => state.get_root_path().clone(),
         };
         Ok(path)
     }

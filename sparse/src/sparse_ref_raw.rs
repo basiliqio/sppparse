@@ -53,7 +53,6 @@ where
 {
     /// Check that the inner version doesn't mismatch with the [SparseState](SparseState)
     fn check_version(&self, state: &SparseState) -> Result<(), SparseError> {
-        println!("SparseRefRaw check_version");
         self.val.check_version(state)
     }
 
@@ -82,9 +81,8 @@ where
     fn self_reset<'a>(
         &mut self,
         state: &mut SparseState,
-        metadata: Option<&SparseRefUtils>,
+        _metadata: Option<&SparseRefUtils>,
     ) -> Result<(), SparseError> {
-        println!("SparseRefRaw reset");
         self._self_reset(state)
     }
 }

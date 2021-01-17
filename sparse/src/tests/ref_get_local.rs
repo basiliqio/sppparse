@@ -1,5 +1,6 @@
 use super::*;
 use serde_json::json;
+use std::str::FromStr;
 
 #[test]
 fn simple() {
@@ -9,9 +10,10 @@ fn simple() {
             "$ref": "#/hello"
         }
     });
-    let mut state = SparseState::new(None).unwrap();
+    let mut state =
+        SparseState::new_from_value(PathBuf::from_str("hello.json").unwrap(), val).unwrap();
 
-    let parsed: SimpleStruct1 = state.add_value(None, val).unwrap();
+    let parsed: SimpleStruct1 = state.parse_root().unwrap();
 
     assert_eq!(
         *parsed.key1.get().unwrap(),
@@ -28,9 +30,10 @@ fn list() {
             "$ref": "#/list/1"
         }
     });
-    let mut state = SparseState::new(None).unwrap();
+    let mut state =
+        SparseState::new_from_value(PathBuf::from_str("hello.json").unwrap(), val).unwrap();
 
-    let parsed: SimpleStruct2 = state.add_value(None, val).unwrap();
+    let parsed: SimpleStruct2 = state.parse_root().unwrap();
 
     assert_eq!(
         *parsed.key1.get().unwrap(),
@@ -47,10 +50,11 @@ fn distant() {
             "$ref": "./help#/list/1"
         }
     });
-    let mut state = SparseState::new(None).unwrap();
+    let mut state =
+        SparseState::new_from_value(PathBuf::from_str("hello.json").unwrap(), val).unwrap();
 
     let err: SparseError = state
-        .add_value::<SimpleStruct2>(None, val)
+        .parse_root::<SimpleStruct2>()
         .expect_err("Supposed to fail, no distant file in a local state");
 
     match err {
@@ -67,10 +71,11 @@ fn not_found() {
             "$ref": "#/list/3"
         }
     });
-    let mut state = SparseState::new(None).unwrap();
+    let mut state =
+        SparseState::new_from_value(PathBuf::from_str("hello.json").unwrap(), val).unwrap();
 
     let err: SparseError = state
-        .add_value::<SimpleStruct2>(None, val)
+        .parse_root::<SimpleStruct2>()
         .expect_err("Supposed to fail, dangling pointer");
 
     match err {

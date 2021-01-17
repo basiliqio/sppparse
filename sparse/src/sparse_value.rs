@@ -67,9 +67,8 @@ where
         val: &'a mut SparseValue<'a, S>,
         state: &'a mut SparseState,
     ) -> Result<(), SparseError> {
-        let file: &'a mut SparseStateFile = state.get_state_file_mut(Some(
-            val.path().ok_or(SparseError::NoDistantFile)?.to_path_buf(),
-        ))?;
+        let file: &'a mut SparseStateFile = state
+            .get_state_file_mut(&val.path().ok_or(SparseError::NoDistantFile)?.to_path_buf())?;
         let nval = serde_json::to_value(val.sref)?;
         file.replace(nval);
         Ok(())

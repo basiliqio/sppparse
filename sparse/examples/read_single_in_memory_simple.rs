@@ -4,6 +4,7 @@ use serde::{Deserialize, Serialize};
 use serde_json::json;
 use sparse::{Sparsable, SparsePointer, SparseSelector, SparseState};
 use std::collections::HashMap;
+use std::path::PathBuf;
 
 #[derive(Debug, Deserialize, Serialize, Sparsable)]
 struct ObjectExampleParsed {
@@ -20,10 +21,9 @@ fn main() {
             }
         }
     });
-    let mut state: SparseState = SparseState::new(None).unwrap(); // Not file base, the base path is set to `None`
-    let mut parsed_obj: ObjectExampleParsed = state
-        .add_value(None, json_value)
-        .expect("the deserialized object");
+    let mut state: SparseState =
+        SparseState::new_from_value(PathBuf::from("hello.json"), json_value).unwrap(); // Not file base, the base path is set to `None`
+    let mut parsed_obj: ObjectExampleParsed = state.parse_root().expect("the deserialized object");
 
     println!(
         "{}",

@@ -1,5 +1,6 @@
 use super::*;
 use serde_json::json;
+use std::str::FromStr;
 
 #[test]
 fn simple_obj() {
@@ -8,9 +9,10 @@ fn simple_obj() {
         "key1": "toto"
     });
 
-    let mut state = SparseState::new(None).unwrap();
+    let mut state =
+        SparseState::new_from_value(PathBuf::from_str("hello.json").unwrap(), val).unwrap();
 
-    let parsed: SimpleStruct1 = state.add_value(None, val).unwrap();
+    let parsed: SimpleStruct1 = state.parse_root().unwrap();
 
     assert_eq!(
         *parsed.key1.get().unwrap(),
@@ -26,9 +28,10 @@ fn wrong_type() {
         "key1": 5
     });
 
-    let mut state = SparseState::new(None).unwrap();
+    let mut state =
+        SparseState::new_from_value(PathBuf::from_str("hello.json").unwrap(), val).unwrap();
 
-    let parsed = state.add_value::<SimpleStruct1>(None, val);
+    let parsed = state.parse_root::<SimpleStruct1>();
 
     if let Err(SparseError::SerdeJson(_err)) = parsed {
         // Ok

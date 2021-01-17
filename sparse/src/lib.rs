@@ -27,7 +27,7 @@
 //! extern crate sparse;
 //!
 //! use serde::{Deserialize, Serialize};
-//! use sparse::{Sparsable, SparseSelector, SparseState};
+//! use sparse::{Sparsable, SparsePointer, SparseSelector, SparseState};
 //! use std::collections::HashMap;
 //! use std::path::PathBuf;
 //!
@@ -39,19 +39,11 @@
 //!
 //! fn main() {
 //!     let mut state: SparseState =
-//!         SparseState::new(Some(PathBuf::from("./examples/read_multi_files.json"))).unwrap();
+//!         SparseState::new_from_file(PathBuf::from(concat!(env!("CARGO_MANIFEST_DIR"), "/", "./examples/read_multi_files.json"))).unwrap();
 //!     let mut val: ObjectExampleParsed = state.parse_root().expect("to parse and add to state");
 //!     println!("Full object {:#?}", val);
-//!
-//!     println!(
-//!         "A single ref {:#?}",
-//!         val.obj.get_mut("key1").unwrap().get(&mut state)
-//!     );
-//!
-//!     println!(
-//!         "A single ref {:#?}",
-//!         val.obj.get_mut("key2").unwrap().get(&mut state)
-//!     );
+//!     println!("A single ref {:#?}", val.obj.get_mut("key1").unwrap().get());
+//!     println!("A single ref {:#?}", val.obj.get_mut("key2").unwrap().get());
 //! }
 //! ```
 //! ## In-memory
@@ -77,8 +69,9 @@
 //!
 //! use serde::{Deserialize, Serialize};
 //! use serde_json::json;
-//! use sparse::{Sparsable, SparseSelector, SparseState};
+//! use sparse::{Sparsable, SparsePointer, SparseSelector, SparseState};
 //! use std::collections::HashMap;
+//! use std::path::PathBuf;
 //!
 //! #[derive(Debug, Deserialize, Serialize, Sparsable)]
 //! struct ObjectExampleParsed {
@@ -95,10 +88,9 @@
 //!             }
 //!         }
 //!     });
-//!     let mut state: SparseState = SparseState::new(None).unwrap(); // Not file base, the base path is set to `None`
-//!     let mut parsed_obj: ObjectExampleParsed = state
-//!         .add_value(None, json_value)
-//!         .expect("the deserialized object");
+//!     let mut state: SparseState =
+//!         SparseState::new_from_value(PathBuf::from("hello.json"), json_value).unwrap(); // Not file base, the base path is set to `None`
+//!     let mut parsed_obj: ObjectExampleParsed = state.parse_root().expect("the deserialized object");
 //!
 //!     println!(
 //!         "{}",
@@ -106,7 +98,7 @@
 //!             .obj
 //!             .get_mut("key1")
 //!             .unwrap()
-//!             .get(&mut state)
+//!             .get()
 //!             .expect("the dereferenced pointer")
 //!     );
 //! }
@@ -120,29 +112,33 @@
 //! extern crate sparse;
 //!
 //! use serde::{Deserialize, Serialize};
-//! use sparse::{Sparsable, SparseSelector, SparseState};
+//! use sparse::{Sparsable, SparsePointer, SparseSelector, SparseState};
 //! use std::collections::HashMap;
 //! use std::path::PathBuf;
 //!
 //! #[derive(Debug, Deserialize, Serialize, Sparsable)]
 //! struct ObjectExampleParsed {
-//!     hello: String,
-//!     obj: HashMap<String, SparseSelector<String>>,
+//! 	hello: String,
+//! 	obj: HashMap<String, SparseSelector<String>>,
 //! }
 //!
 //! fn main() {
-//!     let mut state: SparseState =
-//!         SparseState::new(Some(PathBuf::from("./examples/read_single_file.json"))).unwrap();
-//!     let mut val: ObjectExampleParsed = state.parse_root().expect("to parse and add to state");
+//! 	let mut state: SparseState = SparseState::new_from_file(PathBuf::from(concat!(
+//! 		env!("CARGO_MANIFEST_DIR"),
+//! 		"/",
+//! 		"./examples/read_single_file.json"
+//! 	)))
+//! 	.unwrap();
+//! 	let mut val: ObjectExampleParsed = state.parse_root().expect("to parse and add to state");
 //!
-//!     println!(
-//!         "{}",
-//!         val.obj
-//!             .get_mut("key1")
-//!             .unwrap()
-//!             .get(&mut state)
-//!             .expect("the dereferenced pointer")
-//!     );
+//! 	println!(
+//! 		"{}",
+//! 		val.obj
+//! 			.get_mut("key1")
+//! 			.unwrap()
+//! 			.get()
+//! 			.expect("the dereferenced pointer")
+//! 	);
 //! }
 //! ```
 
@@ -160,7 +156,7 @@ mod sparse_value;
 mod sparse_value_mut;
 
 #[cfg(test)]
-pub mod tests;
+pub(crate) mod tests;
 
 pub use crate::sparse_errors::SparseError;
 pub use crate::sparse_state::{SparseState, SparseStateFile};
@@ -179,6 +175,7 @@ pub use sparse_selector::SparseSelector;
 pub use sparse_value::SparseValue;
 pub use sparse_value_mut::SparseValueMut;
 
+use path_absolutize::*;
 use std::cell::RefCell;
 use std::collections::HashMap;
 use std::convert::From;

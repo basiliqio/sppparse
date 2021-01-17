@@ -5,7 +5,7 @@ use std::str::FromStr;
 fn simple() {
     let mut path = std::env::current_dir().unwrap();
     path.push(PathBuf::from_str(sparse_test_rel_path!("./src/tests/docs/simple.json")).unwrap());
-    let mut state = SparseState::new(Some(path)).unwrap();
+    let mut state = SparseState::new_from_file(path).unwrap();
 
     let mut parsed: SimpleStruct1 = state.parse_root().unwrap();
     <SimpleStruct1 as SparsableTrait>::sparse_init(&mut parsed, &mut state).unwrap();
@@ -18,9 +18,9 @@ fn simple() {
 
 #[test]
 fn distant_self() {
-    let mut state = SparseState::new(Some(
+    let mut state = SparseState::new_from_file(
         PathBuf::from_str(sparse_test_rel_path!("./src/tests/docs/list.json")).unwrap(),
-    ))
+    )
     .unwrap();
 
     let parsed: SimpleStruct3 = state.parse_root().unwrap();
@@ -36,9 +36,9 @@ fn distant_self() {
 
 #[test]
 fn distant_other() {
-    let mut state = SparseState::new(Some(
+    let mut state = SparseState::new_from_file(
         PathBuf::from_str(sparse_test_rel_path!("./src/tests/docs/list.json")).unwrap(),
-    ))
+    )
     .unwrap();
 
     let parsed: SimpleStruct3 = state.parse_root().unwrap();
@@ -54,9 +54,9 @@ fn distant_other() {
 
 #[test]
 fn distant_nested() {
-    let mut state = SparseState::new(Some(
+    let mut state = SparseState::new_from_file(
         PathBuf::from_str(sparse_test_rel_path!("./src/tests/docs/list.json")).unwrap(),
-    ))
+    )
     .unwrap();
 
     let parsed: SimpleStruct3 = state.parse_root().unwrap();

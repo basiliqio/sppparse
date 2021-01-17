@@ -20,11 +20,8 @@ where
     T: Any + DeserializeOwned + Serialize + SparsableTrait,
 {
     fn sparse_init<'a>(&mut self, state: &mut SparseState) -> Result<(), SparseError> {
-        println!("SparseSelector sparse_init 0");
         self.self_reset(state)?;
-        println!("SparseSelector sparse_init 1");
         self.check_version(state)?;
-        println!("SparseSelector sparse_init 2");
         match self {
             SparseSelector::Ref(x) => Ok(x.sparse_init(state)?),
             SparseSelector::Obj(x) => Ok(x.sparse_init(state)?),
@@ -87,7 +84,6 @@ where
     }
 
     fn self_reset(&mut self, state: &mut SparseState) -> Result<(), SparseError> {
-        println!("SparseSelector self_reset");
         match self {
             SparseSelector::Obj(x) => Ok(x.self_reset(state, None)?),
             SparseSelector::Ref(x) => Ok(x.self_reset(state, None)?),
