@@ -94,7 +94,7 @@ where
         let pointer = file
             .val_mut()
             .pointer_mut(pointer)
-            .ok_or(SparseError::UnkownPath(pointer.to_string()))?;
+            .ok_or_else(|| SparseError::UnkownPath(pointer.to_string()))?;
         *pointer = serde_json::to_value(&self.sref)?;
         file.bump_version();
         Ok(())

@@ -61,14 +61,14 @@ where
     }
 
     /// Get a reference to the pointed value deserializing it lazily.
-    fn get<'a>(&'a self) -> Result<SparseValue<'a, S>, SparseError> {
+    fn get(&self) -> Result<SparseValue<'_, S>, SparseError> {
         Ok(self.val.get(Some(&self.utils))?)
     }
 
-    fn get_mut<'a>(
-        &'a mut self,
+    fn get_mut(
+        &mut self,
         state_cell: Rc<RefCell<SparseState>>,
-    ) -> Result<SparseValueMut<'a, S>, SparseError> {
+    ) -> Result<SparseValueMut<'_, S>, SparseError> {
         {
             let state = state_cell
                 .try_borrow()

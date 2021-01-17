@@ -64,7 +64,7 @@ where
 
     /// Get the value this selector is managing, either by deserializing
     /// the pointed value or by directly returning the owned value.
-    fn get<'a>(&'a self) -> Result<SparseValue<'a, T>, SparseError> {
+    fn get(&self) -> Result<SparseValue<'_, T>, SparseError> {
         match self {
             SparseSelector::Obj(x) => Ok(x.get(None)?),
             SparseSelector::Ref(x) => Ok(x.get(None)?),
@@ -72,10 +72,10 @@ where
         }
     }
 
-    fn get_mut<'a>(
-        &'a mut self,
+    fn get_mut(
+        &mut self,
         root: Rc<RefCell<SparseState>>,
-    ) -> Result<SparseValueMut<'a, T>, SparseError> {
+    ) -> Result<SparseValueMut<'_, T>, SparseError> {
         match self {
             SparseSelector::Obj(x) => Ok(x.get_mut(root, None)?),
             SparseSelector::Ref(x) => Ok(x.get_mut(root, None)?),

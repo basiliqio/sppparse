@@ -30,7 +30,7 @@ where
 {
     /// Get the value this selector is managing, either by deserializing
     /// the pointed value or by directly returning the owned value.
-    pub fn check_version<'a>(&'a self) -> Result<(), SparseError> {
+    pub fn check_version(&'_ self) -> Result<(), SparseError> {
         let state = self
             .state
             .try_borrow()
@@ -65,12 +65,12 @@ where
             let root_file: &SparseStateFile = state
                 .get_state_file(state.get_root_path())
                 .map_err(|_e| SparseError::NoRoot)?;
-            *&mut self.val = serde_json::from_value(root_file.val().clone())?;
+            self.val = serde_json::from_value(root_file.val().clone())?;
         }
         self.sparse_init()
     }
 
-    pub fn sparse_init<'a>(&mut self) -> Result<(), SparseError> {
+    pub fn sparse_init(&mut self) -> Result<(), SparseError> {
         self.val.sparse_init(
             &mut *self
                 .state
@@ -79,7 +79,7 @@ where
         )
     }
 
-    pub fn sparse_updt<'a>(&mut self) -> Result<(), SparseError> {
+    pub fn sparse_updt(&mut self) -> Result<(), SparseError> {
         let vcheck = self.check_version();
         match vcheck {
             Ok(()) => Ok(()),
@@ -104,7 +104,7 @@ where
     }
 
     pub fn new_from_value(rval: Value, path: PathBuf) -> Result<Self, SparseError> {
-        let mut state: SparseState = SparseState::new_from_value(path, rval.clone())?;
+        let mut state: SparseState = SparseState::new_from_value(path, rval)?;
         let version: u64 = state.get_state_file(state.get_root_path())?.version();
         let val = state.parse_root()?;
 
