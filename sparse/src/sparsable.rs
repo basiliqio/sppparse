@@ -1,18 +1,32 @@
 use super::*;
+use auto_impl::auto_impl;
 use std::collections::*;
 use std::ffi::CString;
 
+#[auto_impl(&mut, Box)]
 pub trait Sparsable {
-    fn sparse_init(&mut self, state: &mut SparseState) -> Result<(), SparseError>;
-    fn sparse_updt(&mut self, state: &mut SparseState) -> Result<(), SparseError> {
-        self.sparse_init(state)
+    fn sparse_init(
+        &mut self,
+        state: &mut SparseState,
+        metadata: &SparseRefUtils,
+    ) -> Result<(), SparseError>;
+    fn sparse_updt(
+        &mut self,
+        state: &mut SparseState,
+        metadata: &SparseRefUtils,
+    ) -> Result<(), SparseError> {
+        self.sparse_init(state, metadata)
     }
 }
 
 macro_rules! impl_sparsable_nothing {
     ($x:ident) => {
         impl Sparsable for $x {
-            fn sparse_init(&mut self, _state: &mut SparseState) -> Result<(), SparseError> {
+            fn sparse_init(
+                &mut self,
+                _state: &mut SparseState,
+                _metadata: &SparseRefUtils,
+            ) -> Result<(), SparseError> {
                 Ok(())
             }
         }
@@ -20,13 +34,21 @@ macro_rules! impl_sparsable_nothing {
 }
 
 impl<'a> Sparsable for &'a str {
-    fn sparse_init(&mut self, _state: &mut SparseState) -> Result<(), SparseError> {
+    fn sparse_init(
+        &mut self,
+        _state: &mut SparseState,
+        _metadata: &SparseRefUtils,
+    ) -> Result<(), SparseError> {
         Ok(())
     }
 }
 
 impl<'a> Sparsable for &'a [u8] {
-    fn sparse_init(&mut self, _state: &mut SparseState) -> Result<(), SparseError> {
+    fn sparse_init(
+        &mut self,
+        _state: &mut SparseState,
+        _metadata: &SparseRefUtils,
+    ) -> Result<(), SparseError> {
         Ok(())
     }
 }
@@ -35,9 +57,13 @@ impl<K, V> Sparsable for HashMap<K, V>
 where
     V: Sparsable,
 {
-    fn sparse_init(&mut self, state: &mut SparseState) -> Result<(), SparseError> {
+    fn sparse_init(
+        &mut self,
+        state: &mut SparseState,
+        metadata: &SparseRefUtils,
+    ) -> Result<(), SparseError> {
         for i in self.values_mut() {
-            i.sparse_init(state)?;
+            i.sparse_init(state, metadata)?;
         }
         Ok(())
     }
@@ -49,9 +75,13 @@ macro_rules! impl_sparsable_iter {
         where
             T: Sparsable,
         {
-            fn sparse_init(&mut self, state: &mut SparseState) -> Result<(), SparseError> {
+            fn sparse_init(
+                &mut self,
+                state: &mut SparseState,
+                metadata: &SparseRefUtils,
+            ) -> Result<(), SparseError> {
                 for i in self.iter_mut() {
-                    i.sparse_init(state)?;
+                    i.sparse_init(state, metadata)?;
                 }
                 Ok(())
             }

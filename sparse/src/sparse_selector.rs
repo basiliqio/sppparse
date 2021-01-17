@@ -19,21 +19,29 @@ impl<T> SparsableTrait for SparseSelector<T>
 where
     T: Any + DeserializeOwned + Serialize + SparsableTrait,
 {
-    fn sparse_init<'a>(&mut self, state: &mut SparseState) -> Result<(), SparseError> {
-        self.self_reset(state)?;
+    fn sparse_init<'a>(
+        &mut self,
+        state: &mut SparseState,
+        metadata: &SparseRefUtils,
+    ) -> Result<(), SparseError> {
+        self.self_reset(state, metadata)?;
         self.check_version(state)?;
         match self {
-            SparseSelector::Ref(x) => Ok(x.sparse_init(state)?),
-            SparseSelector::Obj(x) => Ok(x.sparse_init(state)?),
+            SparseSelector::Ref(x) => Ok(x.sparse_init(state, metadata)?),
+            SparseSelector::Obj(x) => Ok(x.sparse_init(state, metadata)?),
             SparseSelector::Null => Err(SparseError::BadPointer),
         }
     }
 
-    fn sparse_updt<'a>(&mut self, state: &mut SparseState) -> Result<(), SparseError> {
+    fn sparse_updt<'a>(
+        &mut self,
+        state: &mut SparseState,
+        metadata: &SparseRefUtils,
+    ) -> Result<(), SparseError> {
         let vcheck = self.check_version(state);
         match vcheck {
             Ok(()) => Ok(()),
-            Err(SparseError::OutdatedPointer) => self.sparse_init(state),
+            Err(SparseError::OutdatedPointer) => self.sparse_init(state, metadata),
             Err(_) => vcheck,
         }
     }
@@ -83,10 +91,14 @@ where
         }
     }
 
-    fn self_reset(&mut self, state: &mut SparseState) -> Result<(), SparseError> {
+    fn self_reset(
+        &mut self,
+        state: &mut SparseState,
+        metadata: &SparseRefUtils,
+    ) -> Result<(), SparseError> {
         match self {
-            SparseSelector::Obj(x) => Ok(x.self_reset(state, None)?),
-            SparseSelector::Ref(x) => Ok(x.self_reset(state, None)?),
+            SparseSelector::Obj(x) => Ok(x.self_reset(state, metadata)?),
+            SparseSelector::Ref(x) => Ok(x.self_reset(state, metadata)?),
             SparseSelector::Null => Err(SparseError::BadPointer),
         }
     }

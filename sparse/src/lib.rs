@@ -177,7 +177,6 @@ pub use sparse_selector::SparseSelector;
 pub use sparse_value::SparseValue;
 pub use sparse_value_mut::SparseValueMut;
 
-use path_absolutize::*;
 use std::cell::RefCell;
 use std::collections::HashMap;
 use std::convert::From;

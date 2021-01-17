@@ -1,4 +1,5 @@
 use super::*;
+use std::cell::Ref;
 use std::fmt::{self, Display};
 use std::ops::{Deref, DerefMut};
 
@@ -7,7 +8,7 @@ pub struct SparseValueMut<'a, S: DeserializeOwned + Serialize + SparsableTrait> 
     #[getset(get_copy = "pub", get_mut = "pub")]
     version: Option<u64>,
     #[getset(get = "pub")]
-    path: Option<&'a PathBuf>,
+    path: PathBuf,
     #[getset(get = "pub")]
     pointer: Option<&'a String>,
     state_cell: Rc<RefCell<SparseState>>,
@@ -50,34 +51,38 @@ where
     pub fn new(
         sref: &'a mut S,
         state_cell: Rc<RefCell<SparseState>>,
-        metadata: Option<&'a SparseRefUtils>,
+        metadata: &'a SparseRefUtils,
     ) -> Self {
-        match metadata {
-            Some(metadata) => SparseValueMut {
-                sref,
-                version: Some(metadata.version()),
-                path: metadata.pfile_path().as_ref(),
-                pointer: Some(metadata.pointer()),
-                state_cell,
-            },
-            None => SparseValueMut {
-                sref,
-                version: None,
-                path: None,
-                pointer: None,
-                state_cell,
-            },
+        SparseValueMut {
+            sref,
+            version: Some(metadata.version()),
+            path: metadata.pfile_path().clone(),
+            pointer: Some(metadata.pointer()),
+            state_cell,
         }
     }
 
-    pub fn new_root(sref: &'a mut S, state_cell: Rc<RefCell<SparseState>>) -> Self {
-        SparseValueMut {
+    pub fn new_root(
+        sref: &'a mut S,
+        state_cell: Rc<RefCell<SparseState>>,
+    ) -> Result<Self, SparseError> {
+        let (path, version) = {
+            let state: Ref<'_, SparseState> = state_cell
+                .try_borrow()
+                .map_err(|_e| SparseError::StateAlreadyBorrowed)?;
+            let root_path = state.get_root_path();
+            let root_file = state.get_state_file(root_path)?;
+
+            (root_path.clone(), root_file.version())
+        };
+
+        Ok(SparseValueMut {
             sref,
-            version: None,
-            path: None,
+            version: Some(version),
+            path,
             pointer: None,
             state_cell,
-        }
+        })
     }
 
     pub fn sparse_save(&self) -> Result<(), SparseError> {
@@ -86,11 +91,7 @@ where
             .state_cell
             .try_borrow_mut()
             .map_err(|_e| SparseError::StateAlreadyBorrowed)?;
-        let path: PathBuf = match self.path {
-            Some(x) => x.clone(),
-            None => state.get_root_path().clone(),
-        };
-        let file: &mut SparseStateFile = state.get_state_file_mut(&path)?;
+        let file: &mut SparseStateFile = state.get_state_file_mut(&self.path)?;
         let pointer = file
             .val_mut()
             .pointer_mut(pointer)

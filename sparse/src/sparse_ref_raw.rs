@@ -24,24 +24,32 @@ pub struct SparseRefRaw<S: DeserializeOwned + Serialize + SparsableTrait> {
     /// The path of the file in which originates this pointer, if any
     #[serde(skip)]
     #[getset(get = "pub", get_mut = "pub")]
-    base_path: Option<PathBuf>,
+    base_path: PathBuf,
 }
 
 impl<S> SparsableTrait for SparseRefRaw<S>
 where
     S: DeserializeOwned + Serialize + SparsableTrait,
 {
-    fn sparse_init<'a>(&mut self, state: &mut SparseState) -> Result<(), SparseError> {
-        self._self_reset(state)?;
+    fn sparse_init<'a>(
+        &mut self,
+        state: &mut SparseState,
+        metadata: &SparseRefUtils,
+    ) -> Result<(), SparseError> {
+        self._self_reset(state, metadata)?;
         self.check_version(state)?;
-        Ok(self.val.sparse_init(state)?)
+        Ok(self.val.sparse_init(state, metadata)?)
     }
 
-    fn sparse_updt<'a>(&mut self, state: &mut SparseState) -> Result<(), SparseError> {
+    fn sparse_updt<'a>(
+        &mut self,
+        state: &mut SparseState,
+        metadata: &SparseRefUtils,
+    ) -> Result<(), SparseError> {
         let vcheck = self.check_version(state);
         match vcheck {
             Ok(()) => Ok(()),
-            Err(SparseError::OutdatedPointer) => self.sparse_init(state),
+            Err(SparseError::OutdatedPointer) => self.sparse_init(state, metadata),
             Err(_) => vcheck,
         }
     }
@@ -81,9 +89,9 @@ where
     fn self_reset<'a>(
         &mut self,
         state: &mut SparseState,
-        _metadata: Option<&SparseRefUtils>,
+        metadata: &SparseRefUtils,
     ) -> Result<(), SparseError> {
-        self._self_reset(state)
+        self._self_reset(state, metadata)
     }
 }
 
@@ -92,15 +100,20 @@ where
     S: DeserializeOwned + Serialize + SparsableTrait,
 {
     /// Initialize the inner value, from the [SparseState](SparseState)
-    pub fn init_val(&mut self, state: &mut SparseState) -> Result<(), SparseError> {
+    pub fn init_val(
+        &mut self,
+        state: &mut SparseState,
+        metadata: &SparseRefUtils,
+    ) -> Result<(), SparseError> {
         match self.val {
             SparsePointedValue::Null => {
                 let val = &mut self.val;
-                *val = SparsePointedValue::Ref(SparseRef::new(
-                    state,
-                    self.base_path.clone(),
-                    self.raw_pointer.clone(),
-                )?);
+                let path = match self.base_path.is_absolute() {
+                    true => self.base_path.clone(),
+                    false => metadata.pfile_path().clone(),
+                };
+                *val =
+                    SparsePointedValue::Ref(SparseRef::new(state, path, self.raw_pointer.clone())?);
                 Ok(())
             }
             _ => Ok(()),
@@ -108,8 +121,12 @@ where
     }
 
     /// Reset the inner value in case of change, to reinitialize the inner value
-    fn _self_reset(&mut self, state: &mut SparseState) -> Result<(), SparseError> {
+    fn _self_reset(
+        &mut self,
+        state: &mut SparseState,
+        metadata: &SparseRefUtils,
+    ) -> Result<(), SparseError> {
         self.val = SparsePointedValue::Null;
-        Ok(self.init_val(state)?)
+        Ok(self.init_val(state, metadata)?)
     }
 }

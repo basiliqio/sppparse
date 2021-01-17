@@ -27,17 +27,25 @@ impl<S> SparsableTrait for SparseRef<S>
 where
     S: DeserializeOwned + Serialize + SparsableTrait,
 {
-    fn sparse_init(&mut self, state: &mut SparseState) -> Result<(), SparseError> {
-        self.self_reset(state)?;
+    fn sparse_init(
+        &mut self,
+        state: &mut SparseState,
+        metadata: &SparseRefUtils,
+    ) -> Result<(), SparseError> {
+        self.self_reset(state, metadata)?;
         self.check_version(state)?;
-        Ok(self.val.sparse_init(state)?)
+        Ok(self.val.sparse_init(state, metadata)?)
     }
 
-    fn sparse_updt<'a>(&mut self, state: &mut SparseState) -> Result<(), SparseError> {
+    fn sparse_updt<'a>(
+        &mut self,
+        state: &mut SparseState,
+        metadata: &SparseRefUtils,
+    ) -> Result<(), SparseError> {
         let vcheck = self.check_version(state);
         match vcheck {
             Ok(()) => Ok(()),
-            Err(SparseError::OutdatedPointer) => self.sparse_init(state),
+            Err(SparseError::OutdatedPointer) => self.sparse_init(state, metadata),
             Err(_) => vcheck,
         }
     }
@@ -49,10 +57,8 @@ where
 {
     /// Check if the version of deserialized value mismatch with the version of the [SparseStateFile](SparseStateFile)
     fn check_version<'a>(&'a self, state: &'a SparseState) -> Result<(), SparseError> {
-        let res = state
-            .get_state_file(&self.utils().get_pfile_path(state)?)?
-            .version()
-            == self.utils().version();
+        let res =
+            state.get_state_file(self.utils().pfile_path())?.version() == self.utils().version();
         if !res {
             Err(SparseError::OutdatedPointer)
         } else {
@@ -78,8 +84,12 @@ where
         Ok(self.val.get_mut(state_cell, Some(&self.utils))?)
     }
 
-    fn self_reset(&mut self, state: &mut SparseState) -> Result<(), SparseError> {
-        self._self_reset(state)
+    fn self_reset(
+        &mut self,
+        state: &mut SparseState,
+        metadata: &SparseRefUtils,
+    ) -> Result<(), SparseError> {
+        self._self_reset(state, metadata)
     }
 }
 
@@ -92,9 +102,9 @@ where
         state: &'a mut SparseState,
         utils: &SparseRefUtils,
     ) -> Result<&'a SparseStateFile, SparseError> {
-        let pfile_path: PathBuf = utils.get_pfile_path(state)?;
-        state.add_file(&pfile_path)?;
-        Ok(state.get_state_file(&pfile_path)?)
+        let pfile_path: &PathBuf = utils.pfile_path();
+        state.add_file(pfile_path)?;
+        Ok(state.get_state_file(pfile_path)?)
     }
 
     /// Initialize the inner value using the [SparseState](SparseState).
@@ -119,12 +129,16 @@ where
             _ => val,
         };
         *utils.version_mut() = state_file.version();
-        val.sparse_init(state)?;
+        val.sparse_init(state, utils)?;
         Ok(val)
     }
 
     /// Reset the inner value in case of change, in order to resolve the pointer again
-    fn _self_reset(&mut self, state: &mut SparseState) -> Result<(), SparseError> {
+    fn _self_reset(
+        &mut self,
+        state: &mut SparseState,
+        _metadata: &SparseRefUtils,
+    ) -> Result<(), SparseError> {
         *self.val = SparsePointedValue::Null;
         *self.val = SparseRef::init_val(state, &mut self.utils)?;
         Ok(())
@@ -133,7 +147,7 @@ where
     /// Create a new [SparseRef](SparseRef)
     pub fn new(
         state: &mut SparseState,
-        path: Option<PathBuf>,
+        path: PathBuf,
         raw_ptr: String,
     ) -> Result<Self, SparseError> {
         let mut utils = SparseRefUtils::new(raw_ptr, path);

@@ -7,7 +7,11 @@ pub trait SparsePointer<S: DeserializeOwned + Serialize + SparsableTrait> {
         state_cell: Rc<RefCell<SparseState>>,
     ) -> Result<SparseValueMut<'_, S>, SparseError>;
     fn check_version(&self, state: &SparseState) -> Result<(), SparseError>;
-    fn self_reset(&mut self, state: &mut SparseState) -> Result<(), SparseError>;
+    fn self_reset(
+        &mut self,
+        state: &mut SparseState,
+        metadata: &SparseRefUtils,
+    ) -> Result<(), SparseError>;
 }
 
 pub trait SparsePointerRaw<S: DeserializeOwned + Serialize + SparsableTrait> {
@@ -24,6 +28,6 @@ pub trait SparsePointerRaw<S: DeserializeOwned + Serialize + SparsableTrait> {
     fn self_reset(
         &mut self,
         state: &mut SparseState,
-        metadata: Option<&SparseRefUtils>,
+        metadata: &SparseRefUtils,
     ) -> Result<(), SparseError>;
 }

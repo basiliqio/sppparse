@@ -14,22 +14,30 @@ impl<S> SparsableTrait for SparsePointedValue<S>
 where
     S: DeserializeOwned + Serialize + SparsableTrait,
 {
-    fn sparse_init(&mut self, state: &mut SparseState) -> Result<(), SparseError> {
-        self.self_reset(state, None)?;
+    fn sparse_init(
+        &mut self,
+        state: &mut SparseState,
+        metadata: &SparseRefUtils,
+    ) -> Result<(), SparseError> {
+        self.self_reset(state, metadata)?;
         self.check_version(state)?;
         match self {
-            SparsePointedValue::RefRaw(x) => x.sparse_init(state),
-            SparsePointedValue::Obj(x) => x.sparse_init(state),
-            SparsePointedValue::Ref(x) => x.sparse_init(state),
+            SparsePointedValue::RefRaw(x) => x.sparse_init(state, metadata),
+            SparsePointedValue::Obj(x) => x.sparse_init(state, metadata),
+            SparsePointedValue::Ref(x) => x.sparse_init(state, metadata),
             SparsePointedValue::Null => Err(SparseError::BadPointer),
         }
     }
 
-    fn sparse_updt<'a>(&mut self, state: &mut SparseState) -> Result<(), SparseError> {
+    fn sparse_updt<'a>(
+        &mut self,
+        state: &mut SparseState,
+        metadata: &SparseRefUtils,
+    ) -> Result<(), SparseError> {
         let vcheck = self.check_version(state);
         match vcheck {
             Ok(()) => Ok(()),
-            Err(SparseError::OutdatedPointer) => self.sparse_init(state),
+            Err(SparseError::OutdatedPointer) => self.sparse_init(state, metadata),
             Err(_) => vcheck,
         }
     }
@@ -63,7 +71,7 @@ where
     ) -> Result<SparseValue<'a, S>, SparseError> {
         match self {
             SparsePointedValue::Ref(x) => Ok(x.get()?),
-            SparsePointedValue::Obj(x) => Ok(SparseValue::new(x, metadata)),
+            SparsePointedValue::Obj(x) => Ok(SparseValue::new(x)),
             SparsePointedValue::RefRaw(x) => Ok(x.get(metadata)?),
             SparsePointedValue::Null => Err(SparseError::BadPointer),
         }
@@ -82,7 +90,11 @@ where
         }
         match self {
             SparsePointedValue::Ref(x) => Ok(x.get_mut(state_cell)?),
-            SparsePointedValue::Obj(x) => Ok(SparseValueMut::new(&mut *x, state_cell, metadata)),
+            SparsePointedValue::Obj(x) => Ok(SparseValueMut::new(
+                &mut *x,
+                state_cell,
+                metadata.ok_or(SparseError::BadPointer)?,
+            )),
             SparsePointedValue::RefRaw(x) => Ok(x.get_mut(state_cell, metadata)?),
             SparsePointedValue::Null => Err(SparseError::BadPointer),
         }
@@ -91,10 +103,10 @@ where
     fn self_reset<'a>(
         &mut self,
         state: &mut SparseState,
-        metadata: Option<&'a SparseRefUtils>,
+        metadata: &'a SparseRefUtils,
     ) -> Result<(), SparseError> {
         match self {
-            SparsePointedValue::Ref(x) => Ok(x.self_reset(state)?),
+            SparsePointedValue::Ref(x) => Ok(x.self_reset(state, metadata)?),
             SparsePointedValue::Obj(_x) => Ok(()),
             SparsePointedValue::RefRaw(x) => Ok(x.self_reset(state, metadata)?),
             SparsePointedValue::Null => Ok(()),

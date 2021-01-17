@@ -5,10 +5,15 @@ use std::str::FromStr;
 fn simple() {
     let mut path = std::env::current_dir().unwrap();
     path.push(PathBuf::from_str(sparse_test_rel_path!("./src/tests/docs/simple.json")).unwrap());
-    let mut state = SparseState::new_from_file(path).unwrap();
+    let mut state = SparseState::new_from_file(path.clone()).unwrap();
 
     let mut parsed: SimpleStruct1 = state.parse_root().unwrap();
-    <SimpleStruct1 as SparsableTrait>::sparse_init(&mut parsed, &mut state).unwrap();
+    <SimpleStruct1 as SparsableTrait>::sparse_init(
+        &mut parsed,
+        &mut state,
+        &SparseRefUtils::new("/".to_string(), path),
+    )
+    .unwrap();
     assert_eq!(
         *parsed.key1.get().unwrap(),
         parsed.hello,

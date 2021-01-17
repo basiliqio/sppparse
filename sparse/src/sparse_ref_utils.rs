@@ -1,4 +1,6 @@
 use super::*;
+use path_absolutize::*;
+use path_clean::PathClean;
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default, Getters, CopyGetters, MutGetters)]
 pub struct SparseRefUtils {
@@ -11,7 +13,7 @@ pub struct SparseRefUtils {
     /// The parent file path, if not in-memory
     #[serde(skip)]
     #[getset(get = "pub")]
-    pfile_path: Option<PathBuf>,
+    pfile_path: PathBuf,
     /// The pointer string, as it is set in the original Value
     #[serde(rename = "$ref")]
     #[getset(get = "pub")]
@@ -23,11 +25,24 @@ pub struct SparseRefUtils {
 }
 
 impl SparseRefUtils {
+    pub fn normalize_path(path: PathBuf, base_path: PathBuf) -> Result<PathBuf, SparseError> {
+        let mut base_path = base_path;
+
+        match path.is_absolute() {
+            true => Ok(path.clean()),
+            false => {
+                base_path.pop();
+                base_path.push(path.as_path());
+                Ok(base_path.absolutize()?.to_path_buf().clean())
+            }
+        }
+    }
+
     /// Parse the raw pointer
-    fn parse_pointer(raw_pointer: &str, base_path: Option<PathBuf>) -> (Option<PathBuf>, String) {
+    fn parse_pointer(raw_pointer: &str, base_path: PathBuf) -> (PathBuf, String) {
         let mut raw_pointer: String = raw_pointer.to_string();
         let hash_pos: Option<usize> = raw_pointer.find('#');
-        let mut pfile: Option<PathBuf>;
+        let pfile: Option<PathBuf>;
         let mut pointer_path_str: String;
         match hash_pos {
             Some(pos) => match pos {
@@ -53,35 +68,19 @@ impl SparseRefUtils {
             pointer_path_str.push('/');
         }
 
-        pfile = match (pfile, base_path) {
-            (Some(pfile_inner), Some(mut path_inner)) => {
+        let pfile_res = match (pfile, base_path) {
+            (Some(pfile_inner), mut path_inner) => {
                 path_inner.pop();
                 path_inner.push(pfile_inner);
-                Some(path_inner)
+                path_inner
             }
-            (None, Some(path_inner)) => Some(path_inner),
-            (Some(pfile_inner), None) => Some(pfile_inner),
-            (None, None) => None,
+            (None, path_inner) => path_inner,
         };
-        (pfile, pointer_path_str)
-    }
-
-    /// Get the file path, if any, the pointer reference.
-    pub fn get_pfile_path(&self, state: &SparseState) -> Result<PathBuf, SparseError> {
-        let path: PathBuf = match &self.pfile_path {
-            Some(pfile_path) => {
-                let mut path = state.get_root_path().clone();
-                path.pop(); // Remove the file name
-                path.push(pfile_path.as_path());
-                path.absolutize()?.to_path_buf()
-            }
-            None => state.get_root_path().clone(),
-        };
-        Ok(path)
+        (pfile_res, pointer_path_str)
     }
 
     /// Create a new [SparseRefUtils](SparseRefUtils)
-    pub fn new(raw_ptr: String, path: Option<PathBuf>) -> Self {
+    pub fn new(raw_ptr: String, path: PathBuf) -> Self {
         let (pfile_path, pointer) = SparseRefUtils::parse_pointer(&raw_ptr, path);
         let version = 0;
         SparseRefUtils {
