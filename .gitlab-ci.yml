@@ -17,7 +17,7 @@ build_and_test_rust:
     - cargo test
   after_script:
     - cd sparse
-    - for file in $(find ../target/debug/deps -executable -name "$(basename .)-*");
+    - for file in $(find ../target/debug/deps -executable -name "$(basename ../sparse)-*");
       do
         mkdir -p "../target/cov/$(basename $file)";
         kcov "../target/cov/$(basename $file)" --exclude-pattern="/.cargo,/usr/lib,$PWD/src/tests" $file;
