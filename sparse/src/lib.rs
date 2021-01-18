@@ -146,11 +146,11 @@
 
 mod sparsable;
 mod sparse_errors;
+mod sparse_metadata;
 mod sparse_pointed_value;
 mod sparse_pointer;
 mod sparse_ref;
 mod sparse_ref_raw;
-mod sparse_ref_utils;
 mod sparse_root;
 mod sparse_selector;
 mod sparse_state;
@@ -167,11 +167,11 @@ use serde::{de::DeserializeOwned, Deserialize, Serialize};
 use serde_json::Value;
 pub use sparsable::Sparsable as SparsableTrait;
 pub use sparse_derive::Sparsable;
+pub use sparse_metadata::SparseMetadata;
 pub use sparse_pointed_value::SparsePointedValue;
 pub use sparse_pointer::{SparsePointer, SparsePointerRaw};
 pub use sparse_ref::SparseRef;
 pub use sparse_ref_raw::SparseRefRaw;
-pub use sparse_ref_utils::SparseRefUtils;
 pub use sparse_root::SparseRoot;
 pub use sparse_selector::SparseSelector;
 pub use sparse_value::SparseValue;

@@ -34,7 +34,7 @@ where
     fn sparse_init<'a>(
         &mut self,
         state: &mut SparseState,
-        metadata: &SparseRefUtils,
+        metadata: &SparseMetadata,
     ) -> Result<(), SparseError> {
         self._self_reset(state, metadata)?;
         self.check_version(state)?;
@@ -44,14 +44,15 @@ where
     fn sparse_updt<'a>(
         &mut self,
         state: &mut SparseState,
-        metadata: &SparseRefUtils,
+        metadata: &SparseMetadata,
     ) -> Result<(), SparseError> {
         let vcheck = self.check_version(state);
         match vcheck {
-            Ok(()) => Ok(()),
-            Err(SparseError::OutdatedPointer) => self.sparse_init(state, metadata),
-            Err(_) => vcheck,
-        }
+            Ok(()) => (),
+            Err(SparseError::OutdatedPointer) => self.sparse_init(state, metadata)?,
+            Err(_) => return vcheck,
+        };
+        self.val.sparse_updt(state, metadata)
     }
 }
 
@@ -67,7 +68,7 @@ where
     /// Get the inner value, deserializing the pointed value
     fn get<'a>(
         &'a self,
-        metadata: Option<&'a SparseRefUtils>,
+        metadata: Option<&'a SparseMetadata>,
     ) -> Result<SparseValue<'a, S>, SparseError> {
         Ok(self.val().get(metadata)?)
     }
@@ -75,7 +76,7 @@ where
     fn get_mut<'a>(
         &'a mut self,
         state_cell: Rc<RefCell<SparseState>>,
-        metadata: Option<&'a SparseRefUtils>,
+        metadata: Option<&'a SparseMetadata>,
     ) -> Result<SparseValueMut<'a, S>, SparseError> {
         {
             let state = state_cell
@@ -89,7 +90,7 @@ where
     fn self_reset<'a>(
         &mut self,
         state: &mut SparseState,
-        metadata: &SparseRefUtils,
+        metadata: &SparseMetadata,
     ) -> Result<(), SparseError> {
         self._self_reset(state, metadata)
     }
@@ -103,7 +104,7 @@ where
     pub fn init_val(
         &mut self,
         state: &mut SparseState,
-        metadata: &SparseRefUtils,
+        metadata: &SparseMetadata,
     ) -> Result<(), SparseError> {
         match self.val {
             SparsePointedValue::Null => {
@@ -124,7 +125,7 @@ where
     fn _self_reset(
         &mut self,
         state: &mut SparseState,
-        metadata: &SparseRefUtils,
+        metadata: &SparseMetadata,
     ) -> Result<(), SparseError> {
         self.val = SparsePointedValue::Null;
         Ok(self.init_val(state, metadata)?)

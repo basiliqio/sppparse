@@ -22,7 +22,7 @@ where
     fn sparse_init<'a>(
         &mut self,
         state: &mut SparseState,
-        metadata: &SparseRefUtils,
+        metadata: &SparseMetadata,
     ) -> Result<(), SparseError> {
         self.self_reset(state, metadata)?;
         self.check_version(state)?;
@@ -36,13 +36,18 @@ where
     fn sparse_updt<'a>(
         &mut self,
         state: &mut SparseState,
-        metadata: &SparseRefUtils,
+        metadata: &SparseMetadata,
     ) -> Result<(), SparseError> {
         let vcheck = self.check_version(state);
         match vcheck {
-            Ok(()) => Ok(()),
-            Err(SparseError::OutdatedPointer) => self.sparse_init(state, metadata),
-            Err(_) => vcheck,
+            Ok(()) => (),
+            Err(SparseError::OutdatedPointer) => self.sparse_updt(state, metadata)?,
+            Err(_) => return vcheck,
+        };
+        match self {
+            SparseSelector::Ref(x) => Ok(x.sparse_init(state, metadata)?),
+            SparseSelector::Obj(x) => Ok(x.sparse_init(state, metadata)?),
+            SparseSelector::Null => Err(SparseError::BadPointer),
         }
     }
 }
@@ -94,7 +99,7 @@ where
     fn self_reset(
         &mut self,
         state: &mut SparseState,
-        metadata: &SparseRefUtils,
+        metadata: &SparseMetadata,
     ) -> Result<(), SparseError> {
         match self {
             SparseSelector::Obj(x) => Ok(x.self_reset(state, metadata)?),

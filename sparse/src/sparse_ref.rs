@@ -20,7 +20,7 @@ pub struct SparseRef<S: DeserializeOwned + Serialize + SparsableTrait> {
     /// Metadata about the pointer
     #[serde(flatten)]
     #[getset(get = "pub")]
-    utils: SparseRefUtils,
+    utils: SparseMetadata,
 }
 
 impl<S> SparsableTrait for SparseRef<S>
@@ -30,7 +30,7 @@ where
     fn sparse_init(
         &mut self,
         state: &mut SparseState,
-        metadata: &SparseRefUtils,
+        metadata: &SparseMetadata,
     ) -> Result<(), SparseError> {
         self.self_reset(state, metadata)?;
         self.check_version(state)?;
@@ -40,14 +40,15 @@ where
     fn sparse_updt<'a>(
         &mut self,
         state: &mut SparseState,
-        metadata: &SparseRefUtils,
+        metadata: &SparseMetadata,
     ) -> Result<(), SparseError> {
         let vcheck = self.check_version(state);
         match vcheck {
-            Ok(()) => Ok(()),
-            Err(SparseError::OutdatedPointer) => self.sparse_init(state, metadata),
-            Err(_) => vcheck,
+            Ok(()) => (),
+            Err(SparseError::OutdatedPointer) => self.val.sparse_init(state, metadata)?,
+            Err(_) => return vcheck,
         }
+        self.val.sparse_updt(state, metadata)
     }
 }
 
@@ -87,7 +88,7 @@ where
     fn self_reset(
         &mut self,
         state: &mut SparseState,
-        metadata: &SparseRefUtils,
+        metadata: &SparseMetadata,
     ) -> Result<(), SparseError> {
         self._self_reset(state, metadata)
     }
@@ -100,7 +101,7 @@ where
     /// Fetch a reference to the state file from the [SparseState](SparseState)
     fn get_state_file_init<'a>(
         state: &'a mut SparseState,
-        utils: &SparseRefUtils,
+        utils: &SparseMetadata,
     ) -> Result<&'a SparseStateFile, SparseError> {
         let pfile_path: &PathBuf = utils.pfile_path();
         state.add_file(pfile_path)?;
@@ -110,7 +111,7 @@ where
     /// Initialize the inner value using the [SparseState](SparseState).
     fn init_val(
         state: &mut SparseState,
-        utils: &mut SparseRefUtils,
+        utils: &mut SparseMetadata,
     ) -> Result<SparsePointedValue<S>, SparseError> {
         let state_file = SparseRef::<S>::get_state_file_init(state, utils)?;
 
@@ -137,7 +138,7 @@ where
     fn _self_reset(
         &mut self,
         state: &mut SparseState,
-        _metadata: &SparseRefUtils,
+        _metadata: &SparseMetadata,
     ) -> Result<(), SparseError> {
         *self.val = SparsePointedValue::Null;
         *self.val = SparseRef::init_val(state, &mut self.utils)?;
@@ -150,7 +151,7 @@ where
         path: PathBuf,
         raw_ptr: String,
     ) -> Result<Self, SparseError> {
-        let mut utils = SparseRefUtils::new(raw_ptr, path);
+        let mut utils = SparseMetadata::new(raw_ptr, path);
         let val: Box<SparsePointedValue<S>> = Box::new(SparseRef::init_val(state, &mut utils)?);
         Ok(SparseRef { val, utils })
     }

@@ -51,7 +51,7 @@ where
     pub fn new(
         sref: &'a mut S,
         state_cell: Rc<RefCell<SparseState>>,
-        metadata: &'a SparseRefUtils,
+        metadata: &'a SparseMetadata,
     ) -> Self {
         SparseValueMut {
             sref,

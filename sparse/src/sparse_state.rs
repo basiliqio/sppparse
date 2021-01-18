@@ -87,7 +87,7 @@ impl SparseState {
     /// Create a new `SparseState` from a root file
     pub fn new_from_file(path: PathBuf) -> Result<Self, SparseError> {
         let mut map: HashMap<PathBuf, SparseStateFile> = HashMap::new();
-        let path = SparseRefUtils::normalize_path(path, std::env::current_dir()?)?;
+        let path = SparseMetadata::normalize_path(path, std::env::current_dir()?)?;
         let res = SparseState::read_file(path.clone())?;
         map.insert(path.clone(), res);
         Ok(SparseState {
@@ -100,7 +100,7 @@ impl SparseState {
     /// Create a new `SparseState` from an in memory Value
     pub fn new_from_value(path: PathBuf, val: Value) -> Result<Self, SparseError> {
         let mut map: HashMap<PathBuf, SparseStateFile> = HashMap::new();
-        let path = SparseRefUtils::normalize_path(path, std::env::current_dir()?)?;
+        let path = SparseMetadata::normalize_path(path, std::env::current_dir()?)?;
         let res = SparseStateFile::new(val, SparseFileFormat::Yaml);
         map.insert(path.clone(), res);
         Ok(SparseState {
@@ -143,7 +143,7 @@ impl SparseState {
         <S as SparsableTrait>::sparse_init(
             &mut res,
             self,
-            &SparseRefUtils::new(String::from("/"), self.get_root_path().clone()),
+            &SparseMetadata::new(String::from("/"), self.get_root_path().clone()),
         )?;
         Ok(res)
     }
@@ -153,7 +153,7 @@ impl SparseState {
         &mut self,
         path: PathBuf,
     ) -> Result<S, SparseError> {
-        let path = SparseRefUtils::normalize_path(path, self.get_root_path().clone())?;
+        let path = SparseMetadata::normalize_path(path, self.get_root_path().clone())?;
         let mut res: S = serde_json::from_value::<S>(
             self.map_raw
                 .get(&path)
@@ -164,14 +164,14 @@ impl SparseState {
         <S as SparsableTrait>::sparse_init(
             &mut res,
             self,
-            &SparseRefUtils::new(String::from("/"), self.get_root_path().clone()),
+            &SparseMetadata::new(String::from("/"), self.get_root_path().clone()),
         )?;
         Ok(res)
     }
 
     /// Deserialize a file from the state to the type S
     pub fn add_value(&mut self, path: PathBuf, value: Value) -> Result<(), SparseError> {
-        let path = SparseRefUtils::normalize_path(path, self.get_root_path().clone())?;
+        let path = SparseMetadata::normalize_path(path, self.get_root_path().clone())?;
         if self.map_raw.contains_key(&path) {
             return Ok(());
         }
@@ -187,11 +187,11 @@ impl SparseState {
         obj: &mut S,
     ) -> Result<(), SparseError> {
         let mut obj = obj;
-        let path = SparseRefUtils::normalize_path(path, self.get_root_path().clone())?;
+        let path = SparseMetadata::normalize_path(path, self.get_root_path().clone())?;
         <S as SparsableTrait>::sparse_init(
             &mut obj,
             self,
-            &SparseRefUtils::new(String::from("/"), self.get_root_path().clone()),
+            &SparseMetadata::new(String::from("/"), self.get_root_path().clone()),
         )?;
         self.map_raw.insert(
             path,
@@ -203,7 +203,7 @@ impl SparseState {
     pub fn add_file(&mut self, path: &PathBuf) -> Result<(), SparseError> {
         let npath: PathBuf = match path.is_absolute() {
             true => path.clone(),
-            false => SparseRefUtils::normalize_path(path.clone(), self.get_root_path().clone())?,
+            false => SparseMetadata::normalize_path(path.clone(), self.get_root_path().clone())?,
         };
         if self.map_raw.contains_key(&npath) {
             return Ok(());

@@ -12,7 +12,7 @@ pub struct SparseRoot<S: Any + DeserializeOwned + Serialize + SparsableTrait> {
     #[getset(get = "pub(crate)")]
     state: Rc<RefCell<SparseState>>,
     #[getset(get = "pub")]
-    metadata: SparseRefUtils,
+    metadata: SparseMetadata,
 }
 
 impl<S> fmt::Display for SparseRoot<S>
@@ -108,7 +108,7 @@ where
         let val: S = state.parse_root()?;
         let root_path = state.get_root_path().clone();
         let version: u64 = state.get_state_file(&root_path)?.version();
-        let mut metadata = SparseRefUtils::new(String::from("/"), root_path);
+        let mut metadata = SparseMetadata::new(String::from("/"), root_path);
 
         *metadata.version_mut() = version;
         Ok(SparseRoot {
@@ -130,7 +130,7 @@ where
             state.add_value(path, val)?;
         }
         let val = state.parse_root()?;
-        let mut metadata = SparseRefUtils::new(String::from("/"), root_path);
+        let mut metadata = SparseMetadata::new(String::from("/"), root_path);
 
         *metadata.version_mut() = version;
         Ok(SparseRoot {
@@ -152,7 +152,7 @@ where
         }
         let val: S = state.parse_file(path.clone())?;
         let version: u64 = state.get_state_file(state.get_root_path())?.version();
-        let mut metadata = SparseRefUtils::new(String::from("/"), path);
+        let mut metadata = SparseMetadata::new(String::from("/"), path);
 
         *metadata.version_mut() = version;
         Ok(SparseRoot {

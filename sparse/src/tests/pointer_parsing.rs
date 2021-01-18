@@ -1,7 +1,7 @@
 use super::*;
 
 fn ref_pointer_local_helper(raw_pointer: &str, expected_pointer: &str) {
-    let r = SparseRefUtils::new(
+    let r = SparseMetadata::new(
         raw_pointer.to_string(),
         PathBuf::from(sparse_test_rel_path!("./examples/selector.json")),
     );
@@ -15,7 +15,7 @@ fn ref_pointer_local_helper(raw_pointer: &str, expected_pointer: &str) {
 }
 
 fn ref_pointer_distant_helper(raw_pointer: &str, expected_path: &str, expected_pointer: &str) {
-    let r = SparseRefUtils::new(
+    let r = SparseMetadata::new(
         raw_pointer.to_string(),
         PathBuf::from(sparse_test_rel_path!("./examples/selector.json")),
     );

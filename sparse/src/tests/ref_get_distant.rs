@@ -11,7 +11,7 @@ fn simple() {
     <SimpleStruct1 as SparsableTrait>::sparse_init(
         &mut parsed,
         &mut state,
-        &SparseRefUtils::new("/".to_string(), path),
+        &SparseMetadata::new("/".to_string(), path),
     )
     .unwrap();
     assert_eq!(

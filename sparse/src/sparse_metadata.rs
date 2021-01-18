@@ -3,7 +3,7 @@ use path_absolutize::*;
 use path_clean::PathClean;
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default, Getters, CopyGetters, MutGetters)]
-pub struct SparseRefUtils {
+pub struct SparseMetadata {
     /// The last version the deserialized value, if any. If that version
     /// mismatch with the one in [SparseState](crate::SparseState), it will force [SparseRef](crate::SparseRef) to parse
     /// the value again to update it.
@@ -24,7 +24,7 @@ pub struct SparseRefUtils {
     pointer: String,
 }
 
-impl SparseRefUtils {
+impl SparseMetadata {
     pub fn normalize_path(path: PathBuf, base_path: PathBuf) -> Result<PathBuf, SparseError> {
         let mut base_path = base_path;
 
@@ -79,11 +79,11 @@ impl SparseRefUtils {
         (pfile_res, pointer_path_str)
     }
 
-    /// Create a new [SparseRefUtils](SparseRefUtils)
+    /// Create a new [SparseMetadata](SparseMetadata)
     pub fn new(raw_ptr: String, path: PathBuf) -> Self {
-        let (pfile_path, pointer) = SparseRefUtils::parse_pointer(&raw_ptr, path);
+        let (pfile_path, pointer) = SparseMetadata::parse_pointer(&raw_ptr, path);
         let version = 0;
-        SparseRefUtils {
+        SparseMetadata {
             raw_pointer: raw_ptr,
             pointer,
             pfile_path,

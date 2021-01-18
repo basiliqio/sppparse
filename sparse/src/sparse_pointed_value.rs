@@ -17,7 +17,7 @@ where
     fn sparse_init(
         &mut self,
         state: &mut SparseState,
-        metadata: &SparseRefUtils,
+        metadata: &SparseMetadata,
     ) -> Result<(), SparseError> {
         self.self_reset(state, metadata)?;
         self.check_version(state)?;
@@ -32,13 +32,19 @@ where
     fn sparse_updt<'a>(
         &mut self,
         state: &mut SparseState,
-        metadata: &SparseRefUtils,
+        metadata: &SparseMetadata,
     ) -> Result<(), SparseError> {
         let vcheck = self.check_version(state);
         match vcheck {
-            Ok(()) => Ok(()),
-            Err(SparseError::OutdatedPointer) => self.sparse_init(state, metadata),
-            Err(_) => vcheck,
+            Ok(()) => (),
+            Err(SparseError::OutdatedPointer) => self.sparse_init(state, metadata)?,
+            Err(_) => return vcheck,
+        };
+        match self {
+            SparsePointedValue::RefRaw(x) => x.sparse_updt(state, metadata),
+            SparsePointedValue::Obj(x) => x.sparse_updt(state, metadata),
+            SparsePointedValue::Ref(x) => x.sparse_updt(state, metadata),
+            SparsePointedValue::Null => Err(SparseError::BadPointer),
         }
     }
 }
@@ -67,7 +73,7 @@ where
 
     fn get<'a>(
         &'a self,
-        metadata: Option<&'a SparseRefUtils>,
+        metadata: Option<&'a SparseMetadata>,
     ) -> Result<SparseValue<'a, S>, SparseError> {
         match self {
             SparsePointedValue::Ref(x) => Ok(x.get()?),
@@ -80,7 +86,7 @@ where
     fn get_mut<'a>(
         &'a mut self,
         state_cell: Rc<RefCell<SparseState>>,
-        metadata: Option<&'a SparseRefUtils>,
+        metadata: Option<&'a SparseMetadata>,
     ) -> Result<SparseValueMut<'a, S>, SparseError> {
         {
             let state = state_cell
@@ -103,7 +109,7 @@ where
     fn self_reset<'a>(
         &mut self,
         state: &mut SparseState,
-        metadata: &'a SparseRefUtils,
+        metadata: &'a SparseMetadata,
     ) -> Result<(), SparseError> {
         match self {
             SparsePointedValue::Ref(x) => Ok(x.self_reset(state, metadata)?),
