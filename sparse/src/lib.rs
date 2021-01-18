@@ -161,7 +161,7 @@ mod sparse_value_mut;
 pub(crate) mod tests;
 
 pub use crate::sparse_errors::SparseError;
-pub use crate::sparse_state::{SparseState, SparseStateFile};
+pub use crate::sparse_state::{SparseFileFormat, SparseState, SparseStateFile};
 use getset::{CopyGetters, Getters, MutGetters};
 use serde::{de::DeserializeOwned, Deserialize, Serialize};
 use serde_json::Value;

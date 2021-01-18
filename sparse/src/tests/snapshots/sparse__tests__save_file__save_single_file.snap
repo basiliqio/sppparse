@@ -1,0 +1,10 @@
+---
+source: sparse/src/tests/save_file.rs
+expression: "&val"
+---
+{
+  "hello": "toto",
+  "key1": {
+    "$ref": "#/hello"
+  }
+}

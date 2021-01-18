@@ -1,0 +1,8 @@
+---
+source: sparse/src/tests/save_file.rs
+expression: "&val"
+---
+{
+  "hello": "world",
+  "key1": "hello_world"
+}

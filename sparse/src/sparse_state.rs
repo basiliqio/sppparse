@@ -229,14 +229,14 @@ impl SparseState {
                     true => serde_json::to_string_pretty(state_file.val())?,
                     false => serde_json::to_string(state_file.val())?,
                 };
+                file.set_len(0)?;
                 file.write_all(val.as_bytes())?;
-                file.set_len(val.len() as u64)?;
                 file.sync_all()?;
             }
             Some(SparseFileFormat::Yaml) => {
                 let val = serde_yaml::to_string(state_file.val())?;
+                file.set_len(0)?;
                 file.write_all(val.as_bytes())?;
-                file.set_len(val.len() as u64)?;
                 file.sync_all()?;
             }
             None => {

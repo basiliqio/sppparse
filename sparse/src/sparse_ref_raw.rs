@@ -129,4 +129,12 @@ where
         self.val = SparsePointedValue::Null;
         Ok(self.init_val(state, metadata)?)
     }
+
+    pub fn new(raw_pointer: String) -> Self {
+        SparseRefRaw {
+            val: SparsePointedValue::Null,
+            raw_pointer,
+            base_path: PathBuf::new(),
+        }
+    }
 }

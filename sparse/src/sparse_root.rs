@@ -161,4 +161,11 @@ where
             metadata,
         })
     }
+
+    pub fn save_to_disk(&self, format: Option<SparseFileFormat>) -> Result<(), SparseError> {
+        self.state
+            .try_borrow()
+            .map_err(|_e| SparseError::StateAlreadyBorrowed)?
+            .save_to_disk(format)
+    }
 }

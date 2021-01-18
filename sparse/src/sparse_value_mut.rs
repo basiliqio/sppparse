@@ -86,17 +86,24 @@ where
     }
 
     pub fn sparse_save(&self) -> Result<(), SparseError> {
-        let pointer = self.pointer().ok_or(SparseError::BadPointer)?;
         let mut state = self
             .state_cell
             .try_borrow_mut()
             .map_err(|_e| SparseError::StateAlreadyBorrowed)?;
         let file: &mut SparseStateFile = state.get_state_file_mut(&self.path)?;
-        let pointer = file
-            .val_mut()
-            .pointer_mut(pointer)
-            .ok_or_else(|| SparseError::UnkownPath(pointer.to_string()))?;
-        *pointer = serde_json::to_value(&self.sref)?;
+        match self.pointer {
+            Some(pointer) => {
+                let pointed_value = file
+                    .val_mut()
+                    .pointer_mut(&pointer)
+                    .ok_or_else(|| SparseError::UnkownPath(pointer.to_string()))?;
+                *pointed_value = serde_json::to_value(&self.sref)?;
+            }
+            None => {
+                let pointed_value = file.val_mut();
+                *pointed_value = serde_json::to_value(&self.sref)?;
+            }
+        }
         file.bump_version();
         Ok(())
     }
