@@ -2,6 +2,12 @@ use super::*;
 use serde::{Deserialize, Serialize};
 use std::any::Any;
 
+/// # An owned selector between a raw object, a raw pointer or an owned pointer
+///
+/// Use this enum in your structure when allowing either a pointer or the value directly.
+///
+/// The [SparseSelector](SparseSelector) allows to switch between a raw, unparsed pointer
+/// to a parsed pointer resolved at initialization.
 #[derive(Debug, Clone, Deserialize, Serialize)]
 #[serde(bound = "T: DeserializeOwned + Serialize + SparsableTrait")]
 #[serde(untagged)]
@@ -11,7 +17,8 @@ pub enum SparseSelector<T: DeserializeOwned + Serialize + SparsableTrait> {
     Ref(SparseRefRaw<T>),
     /// The object included in the original document
     Obj(SparsePointedValue<T>),
-
+    /// A default value that should not be present once the
+    /// [SparseRoot](crate::SparseRoot) document has been initialized.
     Null,
 }
 
@@ -69,8 +76,6 @@ impl<T> SparsePointer<T> for SparseSelector<T>
 where
     T: Any + DeserializeOwned + Serialize + SparsableTrait,
 {
-    /// Get the value this selector is managing, either by deserializing
-    /// the pointed value or by directly returning the owned value.
     fn check_version<'a>(&'a self, state: &'a SparseState) -> Result<(), SparseError> {
         match self {
             SparseSelector::Obj(x) => Ok(x.check_version(state)?),
@@ -79,8 +84,6 @@ where
         }
     }
 
-    /// Get the value this selector is managing, either by deserializing
-    /// the pointed value or by directly returning the owned value.
     fn get(&self) -> Result<SparseValue<'_, T>, SparseError> {
         match self {
             SparseSelector::Obj(x) => Ok(x.get(None)?),

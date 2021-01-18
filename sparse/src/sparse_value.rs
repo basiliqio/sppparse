@@ -2,6 +2,7 @@ use super::*;
 use std::fmt::{self, Display};
 use std::ops::Deref;
 
+/// # A value extracted from a [SparsePointer](crate::SparsePointer)
 #[derive(Debug, Clone, Getters, CopyGetters, MutGetters)]
 pub struct SparseValue<'a, S: DeserializeOwned + Serialize + SparsableTrait> {
     sref: &'a S,
@@ -31,7 +32,7 @@ impl<'a, S> SparseValue<'a, S>
 where
     S: DeserializeOwned + Serialize + SparsableTrait,
 {
-    pub fn new(sref: &'a S) -> Self {
+    pub(crate) fn new(sref: &'a S) -> Self {
         SparseValue { sref }
     }
 }

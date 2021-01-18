@@ -1,5 +1,6 @@
 use thiserror::Error;
 
+/// # An error throwable by [Sparse](crate)
 #[derive(Error, Debug)]
 pub enum SparseError {
     /// When the JSON Pointer point to `undefined`
@@ -36,9 +37,6 @@ pub enum SparseError {
     /// When a pointer points to a file that is not in the state
     #[error("File not in state")]
     NotInState,
-    /// When the file extension to parse is not `.json`, `.yaml` or `.yml`
-    #[error("The extension `{0:?}` is not parsable. (.json, .yaml, .yml are allowed)")]
-    BadExtension(Option<String>),
     /// When there is a failure while deserializing the JSON
     #[error(transparent)]
     SerdeJson(#[from] serde_json::Error),

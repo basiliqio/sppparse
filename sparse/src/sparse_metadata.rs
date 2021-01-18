@@ -2,6 +2,11 @@ use super::*;
 use path_absolutize::*;
 use path_clean::PathClean;
 
+/// # Metadata about the pointer
+///
+/// [SparseMetadata](SparseMetadata) store crucial information like the file
+/// the pointer is pointing, the inner pointer inside that file and the last
+/// correct version of the file since the last update.
 #[derive(Debug, Clone, Serialize, Deserialize, Default, Getters, CopyGetters, MutGetters)]
 pub struct SparseMetadata {
     /// The last version the deserialized value, if any. If that version
@@ -25,6 +30,7 @@ pub struct SparseMetadata {
 }
 
 impl SparseMetadata {
+    /// Make a base absolute, using `base_path` as the current working directory
     pub fn normalize_path(path: PathBuf, base_path: PathBuf) -> Result<PathBuf, SparseError> {
         let mut base_path = base_path;
 

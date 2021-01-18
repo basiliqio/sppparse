@@ -3,6 +3,7 @@ use std::cell::Ref;
 use std::fmt::{self, Display};
 use std::ops::{Deref, DerefMut};
 
+/// # A value extracted from a [SparsePointer](crate::SparsePointer) (mutable)
 #[derive(Debug, Getters, CopyGetters, MutGetters)]
 pub struct SparseValueMut<'a, S: DeserializeOwned + Serialize + SparsableTrait> {
     #[getset(get_copy = "pub", get_mut = "pub")]
@@ -48,7 +49,7 @@ impl<'a, S> SparseValueMut<'a, S>
 where
     S: DeserializeOwned + Serialize + SparsableTrait,
 {
-    pub fn new(
+    pub(crate) fn new(
         sref: &'a mut S,
         state_cell: Rc<RefCell<SparseState>>,
         metadata: &'a SparseMetadata,
@@ -62,7 +63,7 @@ where
         }
     }
 
-    pub fn new_root(
+    pub(crate) fn new_root(
         sref: &'a mut S,
         state_cell: Rc<RefCell<SparseState>>,
     ) -> Result<Self, SparseError> {
@@ -85,6 +86,8 @@ where
         })
     }
 
+    /// Persists the object to the state.
+    /// One should call `sparse_updt` on the root after saving something in the state.
     pub fn sparse_save(&self) -> Result<(), SparseError> {
         let mut state = self
             .state_cell

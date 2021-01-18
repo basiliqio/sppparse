@@ -1,6 +1,6 @@
 use super::*;
 
-/// # A root dynamic ref
+/// # An owned dynamic ref
 ///
 /// [SparseRef](SparseRef) will render dynamically the pointed value.
 ///
@@ -69,7 +69,6 @@ impl<S> SparsePointer<S> for SparseRef<S>
 where
     S: DeserializeOwned + Serialize + SparsableTrait,
 {
-    /// Check if the version of deserialized value mismatch with the version of the [SparseStateFile](SparseStateFile)
     fn check_version<'a>(&'a self, state: &'a SparseState) -> Result<(), SparseError> {
         let res =
             state.get_state_file(self.utils().pfile_path())?.version() == self.utils().version();
@@ -80,7 +79,6 @@ where
         }
     }
 
-    /// Get a reference to the pointed value deserializing it lazily.
     fn get(&self) -> Result<SparseValue<'_, S>, SparseError> {
         Ok(self.val.get(Some(&self.utils))?)
     }
@@ -163,7 +161,7 @@ where
     }
 
     /// Create a new [SparseRef](SparseRef)
-    pub fn new(
+    pub(crate) fn new(
         state: &mut SparseState,
         path: PathBuf,
         raw_ptr: String,

@@ -3,8 +3,10 @@ use auto_impl::auto_impl;
 use std::collections::*;
 use std::ffi::CString;
 
+/// # Implements base to be parsed by [Sparse](crate)
 #[auto_impl(&mut, Box)]
 pub trait Sparsable {
+    /// Initialize recusively a [Sparsable](Sparsable) pointer
     fn sparse_init(
         &mut self,
         state: &mut SparseState,
@@ -12,6 +14,7 @@ pub trait Sparsable {
         depth: u32,
     ) -> Result<(), SparseError>;
 
+    /// Update recusively a [Sparsable](Sparsable) pointer
     fn sparse_updt(
         &mut self,
         state: &mut SparseState,
@@ -21,6 +24,8 @@ pub trait Sparsable {
         self.sparse_init(state, metadata, depth)
     }
 
+    /// Check if the current depth isn't too much.
+    /// This is the cyclic pointer protection mechanism
     fn check_depth(depth: u32) -> Result<(), SparseError> {
         match depth < MAX_SPARSE_DEPTH {
             true => Ok(()),

@@ -2,14 +2,15 @@ use super::*;
 use getset::{CopyGetters, Getters, MutGetters};
 use serde::Serialize;
 use std::any::Any;
-use std::cell::{Ref, RefCell, RefMut};
+use std::cell::RefCell;
 use std::fmt::{self, Display};
 
+/// # A structure to hold the root document as well as its state.
 #[derive(Debug, Getters, MutGetters, CopyGetters)]
 pub struct SparseRoot<S: Any + DeserializeOwned + Serialize + SparsableTrait> {
     #[getset(get = "pub(crate)", get_mut = "pub(crate)")]
     val: S,
-    #[getset(get = "pub(crate)")]
+    #[getset(get = "pub")]
     state: Rc<RefCell<SparseState>>,
     #[getset(get = "pub")]
     metadata: SparseMetadata,
@@ -28,17 +29,6 @@ impl<S> SparseRoot<S>
 where
     S: Any + DeserializeOwned + Serialize + SparsableTrait,
 {
-    pub fn get_state(&self) -> Result<Ref<'_, SparseState>, SparseError> {
-        self.state
-            .try_borrow()
-            .map_err(|_e| SparseError::StateAlreadyBorrowed)
-    }
-
-    pub fn get_state_mut(&self) -> Result<RefMut<'_, SparseState>, SparseError> {
-        self.state
-            .try_borrow_mut()
-            .map_err(|_e| SparseError::StateAlreadyBorrowed)
-    }
     /// Get the value this selector is managing, either by deserializing
     /// the pointed value or by directly returning the owned value.
     pub fn check_version(&'_ self) -> Result<(), SparseError> {
@@ -61,12 +51,14 @@ where
         Ok(SparseValue::new(&self.val))
     }
 
+    /// Like `root_get` but return a mutable reference
     pub fn root_get_mut(&mut self) -> Result<SparseValueMut<'_, S>, SparseError> {
         let state = self.state().clone();
         self.check_version()?;
         Ok(SparseValueMut::new_root(self.val_mut(), state)?)
     }
 
+    /// Reset the root object in case of initialization or update
     pub fn root_self_reset(&mut self) -> Result<(), SparseError> {
         {
             let state = self
@@ -81,6 +73,7 @@ where
         self.sparse_init()
     }
 
+    /// Intitialize the inner state
     pub fn sparse_init(&mut self) -> Result<(), SparseError> {
         self.val.sparse_init(
             &mut *self
@@ -92,6 +85,7 @@ where
         )
     }
 
+    /// Update the inner state
     pub fn sparse_updt(&mut self) -> Result<(), SparseError> {
         let vcheck = self.check_version();
         match vcheck {
@@ -104,6 +98,7 @@ where
         }
     }
 
+    /// Create a new [SparseRoot](crate::SparseRoot) from file path
     pub fn new_from_file(path: PathBuf) -> Result<Self, SparseError> {
         let mut state: SparseState = SparseState::new_from_file(path)?;
         let val: S = state.parse_root()?;
@@ -119,6 +114,7 @@ where
         })
     }
 
+    /// Create a new [SparseRoot](crate::SparseRoot) from a Value object
     pub fn new_from_value(
         rval: Value,
         path: PathBuf,
@@ -141,6 +137,7 @@ where
         })
     }
 
+    /// Create a new [SparseRoot](crate::SparseRoot) from a serialized object
     pub fn new_from_obj(
         rval: S,
         path: PathBuf,
@@ -163,6 +160,9 @@ where
         })
     }
 
+    /// Save the state to disk in the specified format.
+    /// If not format is specified, the format in which the document was read will be used.
+    /// If the document was read from memory, it'll be written in prettified JSON
     pub fn save_to_disk(&self, format: Option<SparseFileFormat>) -> Result<(), SparseError> {
         self.state
             .try_borrow()

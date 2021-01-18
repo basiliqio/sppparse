@@ -25,4 +25,4 @@ features = ["precommit-hook", "run-cargo-check", "run-cargo-fmt"]
 
 [dev-dependencies]
 tempfile = "3"
-insta = "1.5.2"
+insta = "1.5"

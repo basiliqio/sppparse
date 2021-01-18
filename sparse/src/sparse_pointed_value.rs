@@ -1,5 +1,9 @@
 use super::*;
 
+/// # A raw selector between a raw object, a raw pointer or an owned pointer
+///
+/// The [SparsePointedValue](SparsePointedValue) allows to switch between a raw, unparsed pointer
+/// to a parsed pointer resolved at initialization.
 #[derive(Debug, Clone, Deserialize, Serialize)]
 #[serde(bound = "S: DeserializeOwned + Serialize + SparsableTrait")]
 #[serde(untagged)]

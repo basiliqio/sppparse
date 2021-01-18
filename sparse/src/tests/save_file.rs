@@ -72,7 +72,6 @@ fn save_change_type2() {
         let mut sparse_root: SparseRoot<SimpleStruct1> =
             SparseRoot::new_from_file(path.clone()).unwrap();
         let mut hello: SparseValueMut<SimpleStruct1> = sparse_root.root_get_mut().unwrap();
-
         hello.key1 = SparseSelector::Ref(SparseRefRaw::new("#/hello".to_string()));
         hello.sparse_save().unwrap();
         sparse_root.sparse_updt().unwrap();

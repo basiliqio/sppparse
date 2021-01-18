@@ -5,6 +5,7 @@ use std::fs;
 use std::io::{Seek, SeekFrom, Write};
 use std::path::PathBuf;
 
+/// # Format in which [Sparse](crate) should read/write the files
 #[derive(Clone, Debug, Copy)]
 pub enum SparseFileFormat {
     Json(bool),
@@ -17,6 +18,7 @@ impl std::default::Default for SparseFileFormat {
     }
 }
 
+/// # A document in the state
 #[derive(Debug, Clone, Getters, MutGetters, CopyGetters)]
 pub struct SparseStateFile {
     /// The value of the file, unparsed.
@@ -43,8 +45,9 @@ impl SparseStateFile {
         }
     }
 
+    /// Increase the internal version by 1
     pub fn bump_version(&mut self) {
-        self.version += 1;
+        self.version = self.version.wrapping_add(1);
     }
 
     /// Replace the [Value](serde_json::Value) of the [SparseStateFile](crate::SparseStateFile) and increment its version.
@@ -54,6 +57,7 @@ impl SparseStateFile {
     }
 }
 
+/// # State in which the documents are cached
 #[derive(Debug, Clone, Getters, MutGetters)]
 pub struct SparseState {
     /// A map between the absolute path (if any), of the file and their [SparseStateFile](SparseStateFile)
@@ -65,6 +69,7 @@ pub struct SparseState {
 }
 
 impl SparseState {
+    /// Read a file
     fn read_file(path: PathBuf) -> Result<SparseStateFile, SparseError> {
         let file_json = fs::File::open(path.as_path())?;
 
@@ -203,6 +208,7 @@ impl SparseState {
         Ok(())
     }
 
+    /// Deserialize a file from the state to the type S
     pub fn add_file(&mut self, path: &PathBuf) -> Result<(), SparseError> {
         let npath: PathBuf = match path.is_absolute() {
             true => path.clone(),
@@ -221,6 +227,7 @@ impl SparseState {
         Ok(())
     }
 
+    /// Write a [SparseStateFile](crate::SparseStateFile) into the state
     fn write_file(
         file: &mut fs::File,
         state_file: &SparseStateFile,

@@ -1,6 +1,6 @@
 use super::*;
 
-/// # A non-root dynamic ref
+/// # A raw dynamic ref
 ///
 /// [SparseRefRaw](SparseRefRaw) will render the pointed value.
 ///
@@ -114,7 +114,7 @@ where
     S: DeserializeOwned + Serialize + SparsableTrait,
 {
     /// Initialize the inner value, from the [SparseState](SparseState)
-    pub fn init_val(
+    pub(crate) fn init_val(
         &mut self,
         state: &mut SparseState,
         metadata: &SparseMetadata,
