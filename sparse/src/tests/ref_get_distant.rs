@@ -12,6 +12,7 @@ fn simple() {
         &mut parsed,
         &mut state,
         &SparseMetadata::new("/".to_string(), path),
+        0,
     )
     .unwrap();
     assert_eq!(

@@ -18,13 +18,16 @@ where
         &mut self,
         state: &mut SparseState,
         metadata: &SparseMetadata,
+        depth: u32,
     ) -> Result<(), SparseError> {
-        self.self_reset(state, metadata)?;
+        SparsePointedValue::<S>::check_depth(depth)?;
+        self.self_reset(state, metadata, depth)?;
+        let ndepth = depth + 1;
         self.check_version(state)?;
         match self {
-            SparsePointedValue::RefRaw(x) => x.sparse_init(state, metadata),
-            SparsePointedValue::Obj(x) => x.sparse_init(state, metadata),
-            SparsePointedValue::Ref(x) => x.sparse_init(state, metadata),
+            SparsePointedValue::RefRaw(x) => x.sparse_init(state, metadata, ndepth),
+            SparsePointedValue::Obj(x) => x.sparse_init(state, metadata, ndepth),
+            SparsePointedValue::Ref(x) => x.sparse_init(state, metadata, ndepth),
             SparsePointedValue::Null => Err(SparseError::BadPointer),
         }
     }
@@ -33,17 +36,20 @@ where
         &mut self,
         state: &mut SparseState,
         metadata: &SparseMetadata,
+        depth: u32,
     ) -> Result<(), SparseError> {
+        SparsePointedValue::<S>::check_depth(depth)?;
+        let ndepth = depth + 1;
         let vcheck = self.check_version(state);
         match vcheck {
             Ok(()) => (),
-            Err(SparseError::OutdatedPointer) => self.sparse_init(state, metadata)?,
+            Err(SparseError::OutdatedPointer) => self.sparse_init(state, metadata, ndepth)?,
             Err(_) => return vcheck,
         };
         match self {
-            SparsePointedValue::RefRaw(x) => x.sparse_updt(state, metadata),
-            SparsePointedValue::Obj(x) => x.sparse_updt(state, metadata),
-            SparsePointedValue::Ref(x) => x.sparse_updt(state, metadata),
+            SparsePointedValue::RefRaw(x) => x.sparse_updt(state, metadata, ndepth),
+            SparsePointedValue::Obj(x) => x.sparse_updt(state, metadata, ndepth),
+            SparsePointedValue::Ref(x) => x.sparse_updt(state, metadata, ndepth),
             SparsePointedValue::Null => Err(SparseError::BadPointer),
         }
     }
@@ -110,11 +116,13 @@ where
         &mut self,
         state: &mut SparseState,
         metadata: &'a SparseMetadata,
+        depth: u32,
     ) -> Result<(), SparseError> {
+        SparsePointedValue::<S>::check_depth(depth)?;
         match self {
-            SparsePointedValue::Ref(x) => Ok(x.self_reset(state, metadata)?),
+            SparsePointedValue::Ref(x) => Ok(x.self_reset(state, metadata, depth + 1)?),
             SparsePointedValue::Obj(_x) => Ok(()),
-            SparsePointedValue::RefRaw(x) => Ok(x.self_reset(state, metadata)?),
+            SparsePointedValue::RefRaw(x) => Ok(x.self_reset(state, metadata, depth + 1)?),
             SparsePointedValue::Null => Ok(()),
         }
     }

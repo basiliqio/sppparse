@@ -1,5 +1,4 @@
 use super::*;
-use path_absolutize::*;
 use serde_json::json;
 use std::str::FromStr;
 
@@ -11,6 +10,7 @@ fn get_pfile_path_local() {
         &mut state,
         PathBuf::from(sparse_test_rel_path!("./src/tests/docs/simple.json")),
         "/wefwefwe/fwef/wef/we/wewerf#hello".to_string(),
+        0,
     )
     .expect_err("Shouldn't have found the file");
 
@@ -37,15 +37,12 @@ fn get_pfile_path_local_no_distant() {
         &mut state,
         PathBuf::from(sparse_test_rel_path!("hello.json")),
         "#hello".to_string(),
+        0,
     )
     .expect("to create the pointer");
     assert_eq!(
         r.utils().pfile_path(),
-        &PathBuf::from_str("hello.json")
-            .unwrap()
-            .absolutize()
-            .unwrap()
-            .to_path_buf(),
+        &PathBuf::from_str(sparse_test_rel_path!("hello.json")).unwrap(),
         "It should be the local document"
     );
 }
@@ -60,6 +57,7 @@ fn get_pfile_path_distant_local_ref() {
         &mut state,
         PathBuf::from(sparse_test_rel_path!("./src/tests/docs/simple.json")),
         "#hello".to_string(),
+        0,
     )
     .expect("to create the pointer");
 
@@ -83,6 +81,7 @@ fn get_pfile_path_distant_distant_ref_relative() {
         &mut state,
         PathBuf::from(sparse_test_rel_path!("./examples/selector.json")),
         "./read_single_file.json#hello".to_string(),
+        0,
     )
     .expect("to create the pointer");
 

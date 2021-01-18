@@ -88,6 +88,7 @@ where
                 .try_borrow_mut()
                 .map_err(|_x| SparseError::StateAlreadyBorrowed)?,
             &self.metadata().clone(),
+            0,
         )
     }
 

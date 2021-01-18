@@ -20,7 +20,10 @@ pub enum SparseError {
     /// When the state is not capable of accepting distant file in a pointer
     #[error("Referencing distant file is not possible for local reference")]
     NoDistantFile,
-    /// One of the limitation of [Sparse](crate::sparse) is the inability to modify root elements
+    /// When there is a recursive pointer
+    #[error("A cyclic reference was stopped")]
+    CyclicRef,
+    /// One of the limitation of [Sparse](crate) is the inability to modify root elements
     /// from a pointer referencing it.
     #[error("Sparse cannot mutate a root element via a SparseValue")]
     MuttatingRoot,

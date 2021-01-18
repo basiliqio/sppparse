@@ -23,12 +23,14 @@ where
         &mut self,
         state: &mut SparseState,
         metadata: &SparseMetadata,
+        depth: u32,
     ) -> Result<(), SparseError> {
-        self.self_reset(state, metadata)?;
+        SparseSelector::<T>::check_depth(depth)?;
+        self.self_reset(state, metadata, depth)?;
         self.check_version(state)?;
         match self {
-            SparseSelector::Ref(x) => Ok(x.sparse_init(state, metadata)?),
-            SparseSelector::Obj(x) => Ok(x.sparse_init(state, metadata)?),
+            SparseSelector::Ref(x) => Ok(x.sparse_init(state, metadata, depth + 1)?),
+            SparseSelector::Obj(x) => Ok(x.sparse_init(state, metadata, depth + 1)?),
             SparseSelector::Null => Err(SparseError::BadPointer),
         }
     }
@@ -37,16 +39,18 @@ where
         &mut self,
         state: &mut SparseState,
         metadata: &SparseMetadata,
+        depth: u32,
     ) -> Result<(), SparseError> {
+        SparseSelector::<T>::check_depth(depth)?;
         let vcheck = self.check_version(state);
         match vcheck {
             Ok(()) => (),
-            Err(SparseError::OutdatedPointer) => self.sparse_updt(state, metadata)?,
+            Err(SparseError::OutdatedPointer) => self.sparse_updt(state, metadata, depth)?,
             Err(_) => return vcheck,
         };
         match self {
-            SparseSelector::Ref(x) => Ok(x.sparse_init(state, metadata)?),
-            SparseSelector::Obj(x) => Ok(x.sparse_init(state, metadata)?),
+            SparseSelector::Ref(x) => Ok(x.sparse_init(state, metadata, depth + 1)?),
+            SparseSelector::Obj(x) => Ok(x.sparse_init(state, metadata, depth + 1)?),
             SparseSelector::Null => Err(SparseError::BadPointer),
         }
     }
@@ -100,10 +104,12 @@ where
         &mut self,
         state: &mut SparseState,
         metadata: &SparseMetadata,
+        depth: u32,
     ) -> Result<(), SparseError> {
+        SparseSelector::<T>::check_depth(depth)?;
         match self {
-            SparseSelector::Obj(x) => Ok(x.self_reset(state, metadata)?),
-            SparseSelector::Ref(x) => Ok(x.self_reset(state, metadata)?),
+            SparseSelector::Obj(x) => Ok(x.self_reset(state, metadata, depth)?),
+            SparseSelector::Ref(x) => Ok(x.self_reset(state, metadata, depth)?),
             SparseSelector::Null => Err(SparseError::BadPointer),
         }
     }

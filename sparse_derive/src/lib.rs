@@ -6,7 +6,7 @@ use synstructure::BindStyle;
 fn sparsable_derive(mut s: synstructure::Structure) -> proc_macro2::TokenStream {
     let body = s.bind_with(|_bi| BindStyle::RefMut).each(|bi| {
         quote! {
-            #bi.sparse_init(state, metadata)?;
+            #bi.sparse_init(state, metadata, ndepth)?;
         }
     });
 
@@ -14,8 +14,10 @@ fn sparsable_derive(mut s: synstructure::Structure) -> proc_macro2::TokenStream 
 		extern crate sparse;
 		use sparse::{SparsableTrait, SparseMetadata, SparseState};
         gen impl SparsableTrait for @Self {
-			fn sparse_init(&mut self, state: &mut sparse::SparseState, metadata: &SparseMetadata) -> Result<(), sparse::SparseError>
+			fn sparse_init(&mut self, state: &mut sparse::SparseState, metadata: &SparseMetadata, depth: u32) -> Result<(), sparse::SparseError>
 			{
+				let ndepth = depth+1;
+
 				match *self { #body };
 				Ok(())
 			}
@@ -26,15 +28,17 @@ fn sparsable_derive(mut s: synstructure::Structure) -> proc_macro2::TokenStream 
 fn sparsable_derive_inner(mut s: synstructure::Structure) -> proc_macro2::TokenStream {
     let body = s.bind_with(|_bi| BindStyle::RefMut).each(|bi| {
         quote! {
-            #bi.sparse_init(state, metadata)?;
+            #bi.sparse_init(state, metadata, ndepth)?;
         }
     });
 
     s.gen_impl(quote! {
         use crate::*;
         gen impl SparsableTrait for @Self {
-            fn sparse_init(&mut self, state: &mut SparseState, metadata: &SparseMetadata) -> Result<(), SparseError>
+            fn sparse_init(&mut self, state: &mut SparseState, metadata: &SparseMetadata, depth: u32) -> Result<(), SparseError>
             {
+				let ndepth = depth+1;
+
                 match *self { #body };
                 Ok(())
             }

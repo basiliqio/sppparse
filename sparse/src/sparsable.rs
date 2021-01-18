@@ -9,13 +9,23 @@ pub trait Sparsable {
         &mut self,
         state: &mut SparseState,
         metadata: &SparseMetadata,
+        depth: u32,
     ) -> Result<(), SparseError>;
+
     fn sparse_updt(
         &mut self,
         state: &mut SparseState,
         metadata: &SparseMetadata,
+        depth: u32,
     ) -> Result<(), SparseError> {
-        self.sparse_init(state, metadata)
+        self.sparse_init(state, metadata, depth)
+    }
+
+    fn check_depth(depth: u32) -> Result<(), SparseError> {
+        match depth < MAX_SPARSE_DEPTH {
+            true => Ok(()),
+            false => Err(SparseError::CyclicRef),
+        }
     }
 }
 
@@ -26,6 +36,7 @@ macro_rules! impl_sparsable_nothing {
                 &mut self,
                 _state: &mut SparseState,
                 _metadata: &SparseMetadata,
+                _depth: u32,
             ) -> Result<(), SparseError> {
                 Ok(())
             }
@@ -38,6 +49,7 @@ impl<'a> Sparsable for &'a str {
         &mut self,
         _state: &mut SparseState,
         _metadata: &SparseMetadata,
+        _depth: u32,
     ) -> Result<(), SparseError> {
         Ok(())
     }
@@ -48,6 +60,7 @@ impl<'a> Sparsable for &'a [u8] {
         &mut self,
         _state: &mut SparseState,
         _metadata: &SparseMetadata,
+        _depth: u32,
     ) -> Result<(), SparseError> {
         Ok(())
     }
@@ -61,9 +74,11 @@ where
         &mut self,
         state: &mut SparseState,
         metadata: &SparseMetadata,
+        depth: u32,
     ) -> Result<(), SparseError> {
+        let ndepth = depth + 1;
         for i in self.values_mut() {
-            i.sparse_init(state, metadata)?;
+            i.sparse_init(state, metadata, ndepth)?;
         }
         Ok(())
     }
@@ -79,9 +94,11 @@ macro_rules! impl_sparsable_iter {
                 &mut self,
                 state: &mut SparseState,
                 metadata: &SparseMetadata,
+                depth: u32,
             ) -> Result<(), SparseError> {
+                let ndepth = depth + 1;
                 for i in self.iter_mut() {
-                    i.sparse_init(state, metadata)?;
+                    i.sparse_init(state, metadata, ndepth)?;
                 }
                 Ok(())
             }

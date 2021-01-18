@@ -157,6 +157,14 @@ mod sparse_state;
 mod sparse_value;
 mod sparse_value_mut;
 
+/// The max stack frames [Sparse](crate) will go before returning a [cyclic](crate::SparseError::CyclicRef).
+///
+/// For each [SparseSelector](crate::SparseSelector) in your objects, you should count 3 stack frames.
+///
+/// i.e. If you have a document with a depth of 30 references. The maximum depth of the recursive function will be
+/// at most 90.
+pub const MAX_SPARSE_DEPTH: u32 = 100;
+
 #[cfg(test)]
 pub(crate) mod tests;
 

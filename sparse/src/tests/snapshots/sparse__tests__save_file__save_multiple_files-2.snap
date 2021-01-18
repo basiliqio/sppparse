@@ -1,0 +1,14 @@
+---
+source: sparse/src/tests/save_file.rs
+expression: "&val"
+---
+{
+  "key1": "unbelievable",
+  "list": [
+    "hehe1",
+    "hehe2",
+    {
+      "$ref": "file3.json#/key1"
+    }
+  ]
+}

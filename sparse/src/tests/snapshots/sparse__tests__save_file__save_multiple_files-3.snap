@@ -1,0 +1,10 @@
+---
+source: sparse/src/tests/save_file.rs
+expression: "&val"
+---
+{
+  "hello": "woaw",
+  "key1": {
+    "$ref": "file2.json#/key1"
+  }
+}

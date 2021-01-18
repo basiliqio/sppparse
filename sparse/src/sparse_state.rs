@@ -144,6 +144,7 @@ impl SparseState {
             &mut res,
             self,
             &SparseMetadata::new(String::from("/"), self.get_root_path().clone()),
+            0,
         )?;
         Ok(res)
     }
@@ -165,6 +166,7 @@ impl SparseState {
             &mut res,
             self,
             &SparseMetadata::new(String::from("/"), self.get_root_path().clone()),
+            0,
         )?;
         Ok(res)
     }
@@ -192,6 +194,7 @@ impl SparseState {
             &mut obj,
             self,
             &SparseMetadata::new(String::from("/"), self.get_root_path().clone()),
+            0,
         )?;
         self.map_raw.insert(
             path,

@@ -31,24 +31,28 @@ where
         &mut self,
         state: &mut SparseState,
         metadata: &SparseMetadata,
+        depth: u32,
     ) -> Result<(), SparseError> {
-        self.self_reset(state, metadata)?;
+        SparseRef::<S>::check_depth(depth)?;
+        self.self_reset(state, metadata, depth)?;
         self.check_version(state)?;
-        Ok(self.val.sparse_init(state, metadata)?)
+        Ok(self.val.sparse_init(state, metadata, depth + 1)?)
     }
 
     fn sparse_updt<'a>(
         &mut self,
         state: &mut SparseState,
         metadata: &SparseMetadata,
+        depth: u32,
     ) -> Result<(), SparseError> {
+        SparseRef::<S>::check_depth(depth)?;
         let vcheck = self.check_version(state);
         match vcheck {
             Ok(()) => (),
-            Err(SparseError::OutdatedPointer) => self.val.sparse_init(state, metadata)?,
+            Err(SparseError::OutdatedPointer) => self.val.sparse_init(state, metadata, depth)?,
             Err(_) => return vcheck,
         }
-        self.val.sparse_updt(state, metadata)
+        self.val.sparse_updt(state, metadata, depth + 1)
     }
 }
 
@@ -89,8 +93,10 @@ where
         &mut self,
         state: &mut SparseState,
         metadata: &SparseMetadata,
+        depth: u32,
     ) -> Result<(), SparseError> {
-        self._self_reset(state, metadata)
+        SparseRef::<S>::check_depth(depth)?;
+        self._self_reset(state, metadata, depth)
     }
 }
 
@@ -112,6 +118,7 @@ where
     fn init_val(
         state: &mut SparseState,
         utils: &mut SparseMetadata,
+        depth: u32,
     ) -> Result<SparsePointedValue<S>, SparseError> {
         let state_file = SparseRef::<S>::get_state_file_init(state, utils)?;
 
@@ -130,7 +137,7 @@ where
             _ => val,
         };
         *utils.version_mut() = state_file.version();
-        val.sparse_init(state, utils)?;
+        val.sparse_init(state, utils, depth + 1)?;
         Ok(val)
     }
 
@@ -139,9 +146,10 @@ where
         &mut self,
         state: &mut SparseState,
         _metadata: &SparseMetadata,
+        depth: u32,
     ) -> Result<(), SparseError> {
         *self.val = SparsePointedValue::Null;
-        *self.val = SparseRef::init_val(state, &mut self.utils)?;
+        *self.val = SparseRef::init_val(state, &mut self.utils, depth)?;
         Ok(())
     }
 
@@ -150,9 +158,11 @@ where
         state: &mut SparseState,
         path: PathBuf,
         raw_ptr: String,
+        depth: u32,
     ) -> Result<Self, SparseError> {
         let mut utils = SparseMetadata::new(raw_ptr, path);
-        let val: Box<SparsePointedValue<S>> = Box::new(SparseRef::init_val(state, &mut utils)?);
+        let val: Box<SparsePointedValue<S>> =
+            Box::new(SparseRef::init_val(state, &mut utils, depth)?);
         Ok(SparseRef { val, utils })
     }
 }

@@ -11,6 +11,7 @@ pub trait SparsePointer<S: DeserializeOwned + Serialize + SparsableTrait> {
         &mut self,
         state: &mut SparseState,
         metadata: &SparseMetadata,
+        depth: u32,
     ) -> Result<(), SparseError>;
 }
 
@@ -29,5 +30,6 @@ pub trait SparsePointerRaw<S: DeserializeOwned + Serialize + SparsableTrait> {
         &mut self,
         state: &mut SparseState,
         metadata: &SparseMetadata,
+        depth: u32,
     ) -> Result<(), SparseError>;
 }
