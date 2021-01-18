@@ -7,7 +7,7 @@ description = "Sparsed pointer parser for JSON/YAML"
 repository = "https://gitlab.com/basiliq/sppparse"
 license-file = "../LICENSE"
 readme = "../README.md"
-
+keywords = ["JSON", "YAML", "sparse", "pointer", "parsing"]
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
