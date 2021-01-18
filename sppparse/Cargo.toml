@@ -3,8 +3,10 @@ name = "sppparse"
 version = "0.1.0"
 authors = ["Francis Le Roy <francis.leroy@protonmail.ch>"]
 edition = "2018"
+description = "Sparsed pointer parser for JSON/YAML"
 repository = "https://gitlab.com/basiliq/sppparse"
-license = "MIT"
+license-file = "../LICENSE"
+readme = "../README.md"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
@@ -15,7 +17,7 @@ serde_yaml = "0.8"
 getset = "0.1.1"
 thiserror = "1"
 rand = "0.8"
-sppparse_derive = { path = "../sppparse_derive" }
+sppparse_derive = { path = "../sppparse_derive", version = "0.1.0" }
 path-absolutize = "3.0.6"
 auto_impl = "0.4"
 path-clean = "0.1.0"
