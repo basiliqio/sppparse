@@ -1,7 +1,7 @@
-extern crate sparse;
+extern crate sppparse;
 
 use serde::{Deserialize, Serialize};
-use sparse::{Sparsable, SparsePointer, SparseRoot, SparseSelector};
+use sppparse::{Sparsable, SparsePointer, SparseRoot, SparseSelector};
 use std::collections::HashMap;
 use std::path::PathBuf;
 

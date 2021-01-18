@@ -309,7 +309,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "sparse"
+name = "sppparse"
 version = "0.1.0"
 dependencies = [
  "auto_impl",
@@ -322,13 +322,13 @@ dependencies = [
  "serde",
  "serde_json",
  "serde_yaml",
- "sparse_derive",
+ "sppparse_derive",
  "tempfile",
  "thiserror",
 ]
 
 [[package]]
-name = "sparse_derive"
+name = "sppparse_derive"
 version = "0.1.0"
 dependencies = [
  "proc-macro2",

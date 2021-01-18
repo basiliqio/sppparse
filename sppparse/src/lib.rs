@@ -25,10 +25,10 @@
 //! Now, let's parse it using the [SparseSelector](crate::SparseSelector) and the [SparseRoot](crate::SparseRoot) :
 //!
 //! ```rust
-//! extern crate sparse;
+//! extern crate sppparse;
 //!
 //! use serde::{Deserialize, Serialize};
-//! use sparse::{Sparsable, SparsePointer, SparseRoot, SparseSelector};
+//! use sppparse::{Sparsable, SparsePointer, SparseRoot, SparseSelector};
 //! use std::collections::HashMap;
 //! use std::path::PathBuf;
 //!
@@ -75,11 +75,11 @@
 //! We can just pass [Value](serde_json::Value) or objects that implements [Serialize](serde::Serialize) to the [SparseRoot](crate::SparseRoot)
 //!
 //! ```rust
-//! extern crate sparse;
+//! extern crate sppparse;
 //!
 //! use serde::{Deserialize, Serialize};
 //! use serde_json::json;
-//! use sparse::{Sparsable, SparsePointer, SparseRoot, SparseSelector};
+//! use sppparse::{Sparsable, SparsePointer, SparseRoot, SparseSelector};
 //! use std::collections::HashMap;
 //! use std::path::PathBuf;
 //!
@@ -120,10 +120,10 @@
 //! the rust code would like the following :
 //!
 //! ```rust
-//! extern crate sparse;
+//! extern crate sppparse;
 //!
 //! use serde::{Deserialize, Serialize};
-//! use sparse::{Sparsable, SparsePointer, SparseRoot, SparseSelector};
+//! use sppparse::{Sparsable, SparsePointer, SparseRoot, SparseSelector};
 //! use std::collections::HashMap;
 //! use std::path::PathBuf;
 //!
@@ -161,9 +161,9 @@
 //! See the following example :
 //!
 //! ```rust
-//! extern crate sparse;
+//! extern crate sppparse;
 //! use serde::{Deserialize, Serialize};
-//! use sparse::{Sparsable, SparsePointer, SparseRoot, SparseSelector};
+//! use sppparse::{Sparsable, SparsePointer, SparseRoot, SparseSelector};
 //! use std::collections::HashMap;
 //! use std::path::PathBuf;
 //!
@@ -249,7 +249,6 @@ use getset::{CopyGetters, Getters, MutGetters};
 use serde::{de::DeserializeOwned, Deserialize, Serialize};
 use serde_json::Value;
 pub use sparsable::Sparsable as SparsableTrait;
-pub use sparse_derive::Sparsable;
 pub use sparse_metadata::SparseMetadata;
 pub use sparse_pointed_value::SparsePointedValue;
 pub use sparse_pointer::{SparsePointer, SparsePointerRaw};
@@ -259,6 +258,7 @@ pub use sparse_root::SparseRoot;
 pub use sparse_selector::SparseSelector;
 pub use sparse_value::SparseValue;
 pub use sparse_value_mut::SparseValueMut;
+pub use sppparse_derive::Sparsable;
 
 use std::cell::RefCell;
 use std::collections::HashMap;

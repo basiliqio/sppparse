@@ -11,10 +11,9 @@ fn sparsable_derive(mut s: synstructure::Structure) -> proc_macro2::TokenStream 
     });
 
     s.gen_impl(quote! {
-		extern crate sparse;
-		use sparse::{SparsableTrait, SparseMetadata, SparseState};
-        gen impl SparsableTrait for @Self {
-			fn sparse_init(&mut self, state: &mut sparse::SparseState, metadata: &SparseMetadata, depth: u32) -> Result<(), sparse::SparseError>
+		extern crate sppparse;
+        gen impl sppparse::SparsableTrait for @Self {
+			fn sparse_init(&mut self, state: &mut sppparse::SparseState, metadata: &sppparse::SparseMetadata, depth: u32) -> Result<(), sppparse::SparseError>
 			{
 				let ndepth = depth+1;
 

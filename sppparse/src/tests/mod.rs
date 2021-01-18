@@ -1,5 +1,5 @@
 use super::*;
-use sparse_derive::SparsableInner;
+use sppparse_derive::SparsableInner;
 mod pfile_path;
 mod pointer_parsing;
 mod recursive;
