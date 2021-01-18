@@ -2,7 +2,9 @@
 
 ![Gitlab pipeline status](https://img.shields.io/gitlab/pipeline/basiliq/sppparse/master)
 ![Codecov](https://img.shields.io/codecov/c/gitlab/basiliq/sppparse?token=THQK5HQAR8)
-
+![License](https://img.shields.io/crates/l/sppparse)
+![Crates.io](https://img.shields.io/crates/v/sppparse)
+![Docs.rs](https://docs.rs/sppparse/badge.svg)
 ## Introduction
 
 Modern `JSON`/`YAML` tends to use [JSON Pointer](https://tools.ietf.org/html/rfc6901). This crate aims to facilitate their use.

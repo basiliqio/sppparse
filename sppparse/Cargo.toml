@@ -5,7 +5,7 @@ authors = ["Francis Le Roy <francis.leroy@protonmail.ch>"]
 edition = "2018"
 description = "Sparsed pointer parser for JSON/YAML"
 repository = "https://gitlab.com/basiliq/sppparse"
-license-file = "../LICENSE"
+license = "MIT"
 readme = "../README.md"
 keywords = ["JSON", "YAML", "sparse", "pointer", "parsing"]
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
