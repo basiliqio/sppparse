@@ -38,10 +38,16 @@ where
         depth: u32,
     ) -> Result<(), SparseError> {
         SparseRefRaw::<S>::check_depth(depth)?;
-        self._self_reset(state, metadata, depth)?;
-        let ndepth = depth + 1;
-        self.check_version(state)?;
-        Ok(self.val.sparse_init(state, metadata, ndepth)?)
+        match self.val {
+            SparsePointedValue::Null => self.self_reset(state, metadata, depth)?,
+            _ => {
+                if let Some(SparseError::OutdatedPointer) = self.check_version(state).err() {
+                    self.self_reset(state, metadata, depth)?;
+                    self.val.sparse_init(state, metadata, depth + 1)?
+                }
+            }
+        }
+        Ok(self.val.sparse_init(state, metadata, depth + 1)?)
     }
 
     fn sparse_updt<'a>(

@@ -21,13 +21,18 @@ where
         depth: u32,
     ) -> Result<(), SparseError> {
         SparsePointedValue::<S>::check_depth(depth)?;
-        self.self_reset(state, metadata, depth)?;
-        let ndepth = depth + 1;
-        self.check_version(state)?;
         match self {
-            SparsePointedValue::RefRaw(x) => x.sparse_init(state, metadata, ndepth),
-            SparsePointedValue::Obj(x) => x.sparse_init(state, metadata, ndepth),
-            SparsePointedValue::Ref(x) => x.sparse_init(state, metadata, ndepth),
+            SparsePointedValue::Null => self.self_reset(state, metadata, depth)?,
+            _ => {
+                if let Some(SparseError::OutdatedPointer) = self.check_version(state).err() {
+                    self.self_reset(state, metadata, depth)?;
+                }
+            }
+        }
+        match self {
+            SparsePointedValue::RefRaw(x) => x.sparse_init(state, metadata, depth + 1),
+            SparsePointedValue::Obj(x) => x.sparse_init(state, metadata, depth + 1),
+            SparsePointedValue::Ref(x) => x.sparse_init(state, metadata, depth + 1),
             SparsePointedValue::Null => Err(SparseError::BadPointer),
         }
     }
@@ -39,17 +44,16 @@ where
         depth: u32,
     ) -> Result<(), SparseError> {
         SparsePointedValue::<S>::check_depth(depth)?;
-        let ndepth = depth + 1;
         let vcheck = self.check_version(state);
         match vcheck {
             Ok(()) => (),
-            Err(SparseError::OutdatedPointer) => self.sparse_init(state, metadata, ndepth)?,
+            Err(SparseError::OutdatedPointer) => self.sparse_init(state, metadata, depth + 1)?,
             Err(_) => return vcheck,
         };
         match self {
-            SparsePointedValue::RefRaw(x) => x.sparse_updt(state, metadata, ndepth),
-            SparsePointedValue::Obj(x) => x.sparse_updt(state, metadata, ndepth),
-            SparsePointedValue::Ref(x) => x.sparse_updt(state, metadata, ndepth),
+            SparsePointedValue::RefRaw(x) => x.sparse_updt(state, metadata, depth + 1),
+            SparsePointedValue::Obj(x) => x.sparse_updt(state, metadata, depth + 1),
+            SparsePointedValue::Ref(x) => x.sparse_updt(state, metadata, depth + 1),
             SparsePointedValue::Null => Err(SparseError::BadPointer),
         }
     }

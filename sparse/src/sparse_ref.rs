@@ -34,8 +34,14 @@ where
         depth: u32,
     ) -> Result<(), SparseError> {
         SparseRef::<S>::check_depth(depth)?;
-        self.self_reset(state, metadata, depth)?;
-        self.check_version(state)?;
+        match *self.val {
+            SparsePointedValue::Null => self.self_reset(state, metadata, depth)?,
+            _ => {
+                if let Some(SparseError::OutdatedPointer) = self.check_version(state).err() {
+                    self.self_reset(state, metadata, depth)?
+                }
+            }
+        }
         Ok(self.val.sparse_init(state, metadata, depth + 1)?)
     }
 
@@ -49,7 +55,10 @@ where
         let vcheck = self.check_version(state);
         match vcheck {
             Ok(()) => (),
-            Err(SparseError::OutdatedPointer) => self.val.sparse_init(state, metadata, depth)?,
+            Err(SparseError::OutdatedPointer) => {
+                self.self_reset(state, metadata, depth)?;
+                self.val.sparse_init(state, metadata, depth + 1)?
+            }
             Err(_) => return vcheck,
         }
         self.val.sparse_updt(state, metadata, depth + 1)
