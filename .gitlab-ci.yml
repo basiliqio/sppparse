@@ -16,11 +16,13 @@ build_and_test_rust:
     - cargo build --all-targets
     - cargo test
   after_script:
-    - for file in $(find target/debug/deps -executable -name "$(basename sparse)-*");
+    - cd sppparse
+    - cargo test
+    - for file in $(find target/debug/deps -executable -name "$(basename sppparse)-*");
       do
         echo "Running $file";
         mkdir -p "target/cov/$(basename $file)";
         cp $file $(basename $file);
-        kcov "target/cov/$(basename $file)" --exclude-pattern="/.cargo,/usr/lib,$PWD/sparse/src/tests" $(basename $file);
+        kcov "target/cov/$(basename $file)" --exclude-pattern="/.cargo,/usr/lib,$PWD/src/tests" $(basename $file);
       done
     - bash <(curl -s https://codecov.io/bash) -t $CODECOV_TOKEN -s target/cov
