@@ -16,4 +16,5 @@ build_and_test_rust:
   after_script:
     - cd sppparse
     - cargo kcov
-    - bash <(curl -s https://codecov.io/bash) -t $CODECOV_TOKEN -s target/cov
+    - cd -
+    - bash <(curl -s https://codecov.io/bash) -t $CODECOV_TOKEN -s sppparse/target/cov
