@@ -1,5 +1,5 @@
 default:
-  image: rustdocker/rustfmt:stable
+  image: registry.gitlab.com/basiliq/dockerfiles
 
 stages:
   - test
@@ -7,20 +7,12 @@ stages:
 build_and_test_rust:
   stage: test
   before_script:
-    - export PATH=$PATH:/root/.cargo/bin/
     - mkdir -p .git/hooks
-    - export NAME=sparse
   script:
     - cargo fmt -- --check
     - cargo clippy -- -D warnings
     - cargo build --all-targets
     - cargo test
   after_script:
-    - export PATH=$PATH:/root/.cargo/bin/
-    - for file in $(find target/debug/deps -executable -name "$(basename sppparse)-*");
-      do
-        echo "Running $file";
-        mkdir -p "target/cov/$(basename $file)";
-        kcov "target/cov/$(basename $file)" --exclude-pattern="/.cargo,/usr/lib,$PWD/sppparse/src/tests" $file;
-      done
+    - cargo kcov
     - bash <(curl -s https://codecov.io/bash) -t $CODECOV_TOKEN -s target/cov
