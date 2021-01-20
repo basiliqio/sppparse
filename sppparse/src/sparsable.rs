@@ -64,6 +64,17 @@ impl Sparsable for Url {
     }
 }
 
+impl Sparsable for serde_json::Value {
+    fn sparse_init(
+        &mut self,
+        _state: &mut SparseState,
+        _metadata: &SparseMetadata,
+        _depth: u32,
+    ) -> Result<(), SparseError> {
+        Ok(())
+    }
+}
+
 impl<T> Sparsable for Option<T>
 where
     T: Serialize + DeserializeOwned + SparsableTrait,

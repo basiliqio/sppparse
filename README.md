@@ -1,9 +1,4 @@
-- [Sppparser (Sparsed Pointer Parser)](#sppparser-sparsed-pointer-parser)
-	- [Introduction](#introduction)
-	- [Features](#features)
-	- [Example](#example)
-
-# Sppparser (Sparsed Pointer Parser)
+# Sppparse (Sparsed Pointer Parser)
 
 <a href="https://gitlab.com/basiliq/sppparse/-/pipelines" alt="Gitlab pipeline status">
   <img src="https://img.shields.io/gitlab/pipeline/basiliq/sppparse/master">
@@ -20,6 +15,11 @@
 <a href="https://docs.rs/sppparse/0.1.0/sppparse/" alt="Docs.rs">
   <img src="https://docs.rs/sppparse/badge.svg">
 </a>
+
+- [Sppparse (Sparsed Pointer Parser)](#sppparse-sparsed-pointer-parser)
+	- [Introduction](#introduction)
+	- [Features](#features)
+	- [Example](#example)
 
 ## Introduction
 
