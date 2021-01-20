@@ -3,6 +3,9 @@ use auto_impl::auto_impl;
 use std::collections::*;
 use std::ffi::CString;
 
+#[cfg(feature = "url")]
+use _url::Url;
+
 /// # Implements base to be parsed by [Sparse](crate)
 #[auto_impl(&mut, Box)]
 pub trait Sparsable {
@@ -47,6 +50,49 @@ macro_rules! impl_sparsable_nothing {
             }
         }
     };
+}
+
+#[cfg(feature = "url")]
+impl Sparsable for Url {
+    fn sparse_init(
+        &mut self,
+        _state: &mut SparseState,
+        _metadata: &SparseMetadata,
+        _depth: u32,
+    ) -> Result<(), SparseError> {
+        Ok(())
+    }
+}
+
+impl<T> Sparsable for Option<T>
+where
+    T: Serialize + DeserializeOwned + SparsableTrait,
+{
+    fn sparse_init(
+        &mut self,
+        state: &mut SparseState,
+        metadata: &SparseMetadata,
+        depth: u32,
+    ) -> Result<(), SparseError> {
+        match self {
+            Some(x) => x.sparse_init(state, metadata, depth + 1)?,
+            None => (),
+        };
+        Ok(())
+    }
+
+    fn sparse_updt(
+        &mut self,
+        state: &mut SparseState,
+        metadata: &SparseMetadata,
+        depth: u32,
+    ) -> Result<(), SparseError> {
+        match self {
+            Some(x) => x.sparse_updt(state, metadata, depth + 1)?,
+            None => (),
+        };
+        Ok(())
+    }
 }
 
 impl<'a> Sparsable for &'a str {

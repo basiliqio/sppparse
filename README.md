@@ -1,3 +1,8 @@
+- [Sppparser (Sparsed Pointer Parser)](#sppparser-sparsed-pointer-parser)
+	- [Introduction](#introduction)
+	- [Features](#features)
+	- [Example](#example)
+
 # Sppparser (Sparsed Pointer Parser)
 
 <a href="https://gitlab.com/basiliq/sppparse/-/pipelines" alt="Gitlab pipeline status">
@@ -21,6 +26,12 @@
 Modern `JSON`/`YAML` tends to use [JSON Pointer](https://tools.ietf.org/html/rfc6901). This crate aims to facilitate their use.
 
 Built on top of [serde](https://serde.rs/), it allow a generic way to read and modify documents containing `$ref`.
+
+## Features
+
+The following features are available :
+
+- `url`: Add support for `url::Url`
 
 ## Example
 
