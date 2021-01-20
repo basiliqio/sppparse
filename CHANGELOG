@@ -1,5 +1,6 @@
 ## [Unreleased]
 ### Added
+- Added the trait `PartialEq` to Sppparse's structs
 - Added the trait `SparsableTrait` to serde_json::Value
 
 ## [0.1.1] - 2021-01-20

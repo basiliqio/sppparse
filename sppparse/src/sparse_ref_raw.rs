@@ -10,7 +10,7 @@ use super::*;
 /// If the [SparseStateFile](crate::SparseStateFile)
 /// used to render the object changes, [SparseRefRaw](SparseRefRaw)
 /// will deserialize it again in order to always be up to date.
-#[derive(Debug, Clone, Serialize, Deserialize, Getters, MutGetters)]
+#[derive(Debug, Clone, Serialize, Deserialize, Getters, MutGetters, PartialEq)]
 #[serde(bound = "S: DeserializeOwned + Serialize + SparsableTrait")]
 pub struct SparseRefRaw<S: DeserializeOwned + Serialize + SparsableTrait> {
     /// The inner value

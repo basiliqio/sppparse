@@ -7,7 +7,9 @@ use path_clean::PathClean;
 /// [SparseMetadata](SparseMetadata) store crucial information like the file
 /// the pointer is pointing, the inner pointer inside that file and the last
 /// correct version of the file since the last update.
-#[derive(Debug, Clone, Serialize, Deserialize, Default, Getters, CopyGetters, MutGetters)]
+#[derive(
+    Debug, Clone, Serialize, Deserialize, Default, Getters, CopyGetters, MutGetters, PartialEq,
+)]
 pub struct SparseMetadata {
     /// The last version the deserialized value, if any. If that version
     /// mismatch with the one in [SparseState](crate::SparseState), it will force [SparseRef](crate::SparseRef) to parse

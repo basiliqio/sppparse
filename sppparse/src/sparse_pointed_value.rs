@@ -4,7 +4,7 @@ use super::*;
 ///
 /// The [SparsePointedValue](SparsePointedValue) allows to switch between a raw, unparsed pointer
 /// to a parsed pointer resolved at initialization.
-#[derive(Debug, Clone, Deserialize, Serialize)]
+#[derive(Debug, Clone, Deserialize, Serialize, PartialEq)]
 #[serde(bound = "S: DeserializeOwned + Serialize + SparsableTrait")]
 #[serde(untagged)]
 pub enum SparsePointedValue<S: DeserializeOwned + Serialize + SparsableTrait> {

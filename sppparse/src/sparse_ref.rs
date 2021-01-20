@@ -10,7 +10,7 @@ use super::*;
 /// If the [SparseStateFile](crate::SparseStateFile)
 /// used to render the object changes, [SparseRef](SparseRef)
 /// will deserialize it again in order to always be up to date.
-#[derive(Debug, Clone, Deserialize, Serialize, Getters)]
+#[derive(Debug, Clone, Deserialize, Serialize, Getters, PartialEq)]
 #[serde(bound = "S: DeserializeOwned + Serialize + SparsableTrait")]
 pub struct SparseRef<S: DeserializeOwned + Serialize + SparsableTrait> {
     /// The value deserialized value, if any
