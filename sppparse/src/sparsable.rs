@@ -4,7 +4,7 @@ use std::collections::*;
 use std::ffi::CString;
 
 #[cfg(feature = "url")]
-use _url::Url;
+use url_inner::Url;
 
 /// # Implements base to be parsed by [Sparse](crate)
 #[auto_impl(&mut, Box)]
