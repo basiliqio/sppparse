@@ -6,6 +6,9 @@ use std::ffi::CString;
 #[cfg(feature = "url")]
 use url_inner::Url;
 
+#[cfg(feature = "semver")]
+use semver_inner::{Version, VersionReq};
+
 /// # Implements base to be parsed by [Sparse](crate)
 #[auto_impl(&mut, Box)]
 pub trait Sparsable {
@@ -54,6 +57,30 @@ macro_rules! impl_sparsable_nothing {
 
 #[cfg(feature = "url")]
 impl Sparsable for Url {
+    fn sparse_init(
+        &mut self,
+        _state: &mut SparseState,
+        _metadata: &SparseMetadata,
+        _depth: u32,
+    ) -> Result<(), SparseError> {
+        Ok(())
+    }
+}
+
+#[cfg(feature = "semver")]
+impl Sparsable for Version {
+    fn sparse_init(
+        &mut self,
+        _state: &mut SparseState,
+        _metadata: &SparseMetadata,
+        _depth: u32,
+    ) -> Result<(), SparseError> {
+        Ok(())
+    }
+}
+
+#[cfg(feature = "semver")]
+impl Sparsable for VersionReq {
     fn sparse_init(
         &mut self,
         _state: &mut SparseState,
