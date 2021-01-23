@@ -24,9 +24,8 @@ sppparse_derive = { path = "../sppparse_derive", version = "0.1.0" }
 path-absolutize = "3.0.6"
 auto_impl = "0.4"
 path-clean = "0.1.0"
-
 url_inner = { package = "url", version = "2", optional = true }
-
+serde_path_to_error = "0.1.4"
 [dev-dependencies.cargo-husky]
 version = "1"
 default-features = false # Disable features which are enabled by default

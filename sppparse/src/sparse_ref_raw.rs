@@ -15,7 +15,7 @@ use super::*;
 pub struct SparseRefRaw<S: DeserializeOwned + Serialize + SparsableTrait> {
     /// The inner value
     #[serde(skip)]
-    #[getset(get, get_mut)]
+    #[getset(get = "pub", get_mut)]
     val: SparsePointedValue<S>,
     /// The raw `JSON` pointer, as it is deserialized
     #[serde(rename = "$ref")]

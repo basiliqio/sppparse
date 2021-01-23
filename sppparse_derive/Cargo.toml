@@ -1,6 +1,6 @@
 [package]
 name = "sppparse_derive"
-version = "0.1.0"
+version = "0.1.1"
 authors = ["Francis Le Roy <francis.leroy@protonmail.ch>"]
 edition = "2018"
 description = "Derive macro for Sppparse"
@@ -16,3 +16,5 @@ proc-macro = true
 quote = "1.0"
 synstructure = "0.12"
 proc-macro2 = "1"
+proc-macro-crate = "0.1.5"
+syn = "1"

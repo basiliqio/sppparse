@@ -1,6 +1,7 @@
 use super::*;
 use getset::{CopyGetters, Getters, MutGetters};
 use rand::Rng;
+use serde::de::IntoDeserializer;
 use std::fs;
 use std::io::{Seek, SeekFrom, Write};
 use std::path::PathBuf;
@@ -138,20 +139,30 @@ impl SparseState {
     pub fn parse_root<S: DeserializeOwned + Serialize + SparsableTrait>(
         &mut self,
     ) -> Result<S, SparseError> {
-        let mut res: S = serde_json::from_value::<S>(
-            self.map_raw
-                .get(self.get_root_path())
-                .ok_or(SparseError::NotInState)?
-                .val()
-                .clone(),
-        )?;
-        <S as SparsableTrait>::sparse_init(
-            &mut res,
-            self,
-            &SparseMetadata::new(String::from("/"), self.get_root_path().clone()),
-            0,
-        )?;
-        Ok(res)
+        let d = self
+            .map_raw
+            .get(self.get_root_path())
+            .ok_or(SparseError::NotInState)?
+            .val()
+            .clone()
+            .into_deserializer();
+        let res: Result<S, serde_path_to_error::Error<serde_json::Error>> =
+            serde_path_to_error::deserialize(d);
+        match res {
+            Ok(mut res) => {
+                <S as SparsableTrait>::sparse_init(
+                    &mut res,
+                    self,
+                    &SparseMetadata::new(String::from("/"), self.get_root_path().clone()),
+                    0,
+                )?;
+                Ok(res)
+            }
+            Err(err) => {
+                println!("Error path : {:#?}", err.path().to_string());
+                Err(SparseError::SerdeJson(err.into_inner()))
+            }
+        }
     }
 
     /// Deserialize a document from the state to the type S

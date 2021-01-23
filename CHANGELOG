@@ -2,6 +2,8 @@
 ### Added
 - Added the trait `PartialEq` to Sppparse's structs
 - Added the trait `SparsableTrait` to serde_json::Value
+- Changed how the proc macro resolve its crate name
+- Added a public function to get the `SparsePointedValue` from `SparseRefRaw`
 
 ## [0.1.1] - 2021-01-20
 ### Added
