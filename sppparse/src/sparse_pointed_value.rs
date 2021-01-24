@@ -91,7 +91,7 @@ where
     ) -> Result<SparseValue<'a, S>, SparseError> {
         match self {
             SparsePointedValue::Ref(x) => Ok(x.get()?),
-            SparsePointedValue::Obj(x) => Ok(SparseValue::new(x)),
+            SparsePointedValue::Obj(x) => Ok(SparseValue::new(x, metadata)),
             SparsePointedValue::RefRaw(x) => Ok(x.get(metadata)?),
             SparsePointedValue::Null => Err(SparseError::BadPointer),
         }
@@ -110,11 +110,7 @@ where
         }
         match self {
             SparsePointedValue::Ref(x) => Ok(x.get_mut(state_cell)?),
-            SparsePointedValue::Obj(x) => Ok(SparseValueMut::new(
-                &mut *x,
-                state_cell,
-                metadata.ok_or(SparseError::BadPointer)?,
-            )),
+            SparsePointedValue::Obj(x) => Ok(SparseValueMut::new(&mut *x, state_cell, metadata)),
             SparsePointedValue::RefRaw(x) => Ok(x.get_mut(state_cell, metadata)?),
             SparsePointedValue::Null => Err(SparseError::BadPointer),
         }

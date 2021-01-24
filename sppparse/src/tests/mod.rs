@@ -1,5 +1,6 @@
 use super::*;
 use sppparse_derive::SparsableInner;
+mod inline;
 mod pfile_path;
 mod pointer_parsing;
 mod recursive;

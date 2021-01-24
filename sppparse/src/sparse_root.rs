@@ -48,7 +48,7 @@ where
     /// Get the value this selector is managing, either by deserializing
     /// the pointed value or by directly returning the owned value.
     pub fn root_get(&self) -> Result<SparseValue<'_, S>, SparseError> {
-        Ok(SparseValue::new(&self.val))
+        Ok(SparseValue::new(&self.val, Some(&self.metadata)))
     }
 
     /// Like `root_get` but return a mutable reference
