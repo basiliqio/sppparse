@@ -7,6 +7,7 @@
 - Added the `semver` feature, adding support for `semver::{Version, VersionReq}`
 - Changed how the `SparseValueMut` is constructed.
 - Added a function to resolve a new pointer at runtime using a `SparseValue` or a `SparseValueMut`
+- Removed bounds on structs
 
 ## [0.1.1] - 2021-01-20
 ### Added

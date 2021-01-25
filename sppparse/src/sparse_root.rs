@@ -7,7 +7,7 @@ use std::fmt::{self, Display};
 
 /// # A structure to hold the root document as well as its state.
 #[derive(Debug, Getters, MutGetters, CopyGetters)]
-pub struct SparseRoot<S: Any + DeserializeOwned + Serialize + SparsableTrait> {
+pub struct SparseRoot<S> {
     #[getset(get = "pub(crate)", get_mut = "pub(crate)")]
     val: S,
     #[getset(get = "pub")]

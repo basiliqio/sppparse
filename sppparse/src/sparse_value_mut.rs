@@ -5,7 +5,7 @@ use std::ops::{Deref, DerefMut};
 
 /// # A value extracted from a [SparsePointer](crate::SparsePointer) (mutable)
 #[derive(Debug, Getters, CopyGetters, MutGetters)]
-pub struct SparseValueMut<'a, S: DeserializeOwned + Serialize + SparsableTrait> {
+pub struct SparseValueMut<'a, S> {
     #[getset(get_copy = "pub", get_mut = "pub")]
     version: Option<u64>,
     #[getset(get = "pub")]

@@ -25,7 +25,7 @@
 
 Modern `JSON`/`YAML` tends to use [JSON Pointer](https://tools.ietf.org/html/rfc6901). This crate aims to facilitate their use.
 
-Built on top of [serde](https://serde.rs/), it allow a generic way to read and modify documents containing `$ref`.
+Built on top of [serde](https://serde.rs/), this library allows a generic way to read and modify documents containing `$ref`.
 
 ## Features
 

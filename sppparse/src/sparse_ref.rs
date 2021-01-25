@@ -11,11 +11,11 @@ use super::*;
 /// used to render the object changes, [SparseRef](SparseRef)
 /// will deserialize it again in order to always be up to date.
 #[derive(Debug, Clone, Deserialize, Serialize, Getters, PartialEq)]
-#[serde(bound = "S: DeserializeOwned + Serialize + SparsableTrait")]
-pub struct SparseRef<S: DeserializeOwned + Serialize + SparsableTrait> {
+pub struct SparseRef<S> {
     /// The value deserialized value, if any
     #[serde(skip)]
     #[getset(get = "pub")]
+    #[serde(default = "SparsePointedValue::<S>::default_boxed")]
     val: Box<SparsePointedValue<S>>,
     /// Metadata about the pointer
     #[serde(flatten)]

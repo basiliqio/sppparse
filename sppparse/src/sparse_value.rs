@@ -5,7 +5,7 @@ use std::ops::Deref;
 
 /// # A value extracted from a [SparsePointer](crate::SparsePointer)
 #[derive(Debug, Clone, Getters, CopyGetters, MutGetters)]
-pub struct SparseValue<'a, S: DeserializeOwned + Serialize + SparsableTrait> {
+pub struct SparseValue<'a, S> {
     #[getset(get_copy = "pub")]
     metadata: Option<&'a SparseMetadata>,
     sref: &'a S,

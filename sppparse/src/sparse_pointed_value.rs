@@ -5,9 +5,8 @@ use super::*;
 /// The [SparsePointedValue](SparsePointedValue) allows to switch between a raw, unparsed pointer
 /// to a parsed pointer resolved at initialization.
 #[derive(Debug, Clone, Deserialize, Serialize, PartialEq)]
-#[serde(bound = "S: DeserializeOwned + Serialize + SparsableTrait")]
 #[serde(untagged)]
-pub enum SparsePointedValue<S: DeserializeOwned + Serialize + SparsableTrait> {
+pub enum SparsePointedValue<S> {
     RefRaw(Box<SparseRefRaw<S>>),
     Obj(S),
     Ref(SparseRef<S>),
@@ -63,12 +62,15 @@ where
     }
 }
 
-impl<S> std::default::Default for SparsePointedValue<S>
-where
-    S: DeserializeOwned + Serialize + SparsableTrait,
-{
+impl<S> std::default::Default for SparsePointedValue<S> {
     fn default() -> Self {
         SparsePointedValue::Null
+    }
+}
+
+impl<S> SparsePointedValue<S> {
+    pub fn default_boxed() -> Box<Self> {
+        Box::new(SparsePointedValue::<S>::default())
     }
 }
 

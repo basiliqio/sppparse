@@ -11,10 +11,9 @@ fn sparsable_derive(mut s: synstructure::Structure) -> proc_macro2::TokenStream 
     });
     let crate_name = proc_macro_crate::crate_name("sppparse")
         .map(|v| syn::Ident::new(v.as_str(), proc_macro2::Span::call_site()));
-    match crate_name
-	{
-		Ok(name) =>
-		{
+    s.add_bounds(synstructure::AddBounds::Both);
+    match crate_name {
+		Ok(name) => {
 			s.gen_impl(quote! {
 				extern crate #name as sppparse;
 				gen impl sppparse::SparsableTrait for @Self {
@@ -26,7 +25,7 @@ fn sparsable_derive(mut s: synstructure::Structure) -> proc_macro2::TokenStream 
 					}
 				}
 			})
-		},
+		}
 		_ => {
 			s.gen_impl(quote! {
 				extern crate sppparse;
@@ -50,6 +49,7 @@ fn sparsable_derive_inner(mut s: synstructure::Structure) -> proc_macro2::TokenS
         }
     });
 
+    s.add_bounds(synstructure::AddBounds::Fields);
     s.gen_impl(quote! {
         use crate::*;
         gen impl SparsableTrait for @Self {

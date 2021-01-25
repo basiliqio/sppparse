@@ -11,11 +11,11 @@ use super::*;
 /// used to render the object changes, [SparseRefRaw](SparseRefRaw)
 /// will deserialize it again in order to always be up to date.
 #[derive(Debug, Clone, Serialize, Deserialize, Getters, MutGetters, PartialEq)]
-#[serde(bound = "S: DeserializeOwned + Serialize + SparsableTrait")]
-pub struct SparseRefRaw<S: DeserializeOwned + Serialize + SparsableTrait> {
+pub struct SparseRefRaw<S> {
     /// The inner value
     #[serde(skip)]
     #[getset(get = "pub", get_mut)]
+    #[serde(default = "SparsePointedValue::<S>::default")]
     val: SparsePointedValue<S>,
     /// The raw `JSON` pointer, as it is deserialized
     #[serde(rename = "$ref")]

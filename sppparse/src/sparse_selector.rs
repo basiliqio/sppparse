@@ -9,9 +9,8 @@ use std::any::Any;
 /// The [SparseSelector](SparseSelector) allows to switch between a raw, unparsed pointer
 /// to a parsed pointer resolved at initialization.
 #[derive(Debug, Clone, Deserialize, Serialize, PartialEq)]
-#[serde(bound = "T: DeserializeOwned + Serialize + SparsableTrait")]
 #[serde(untagged)]
-pub enum SparseSelector<T: DeserializeOwned + Serialize + SparsableTrait> {
+pub enum SparseSelector<T> {
     /// A deserialized JSON pointer contained the pointed value from the local
     /// or distant file
     Ref(SparseRefRaw<T>),
