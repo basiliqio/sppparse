@@ -1,7 +1,6 @@
 use super::*;
 use getset::{CopyGetters, Getters, MutGetters};
 use serde::Serialize;
-use std::any::Any;
 use std::cell::RefCell;
 use std::fmt::{self, Display};
 
@@ -18,7 +17,7 @@ pub struct SparseRoot<S> {
 
 impl<S> fmt::Display for SparseRoot<S>
 where
-    S: Any + DeserializeOwned + Serialize + SparsableTrait + Display,
+    S: DeserializeOwned + Serialize + SparsableTrait + Display,
 {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "{}", self.val)
@@ -27,7 +26,7 @@ where
 
 impl<S> SparseRoot<S>
 where
-    S: Any + DeserializeOwned + Serialize + SparsableTrait,
+    S: DeserializeOwned + Serialize + SparsableTrait,
 {
     /// Get the value this selector is managing, either by deserializing
     /// the pointed value or by directly returning the owned value.

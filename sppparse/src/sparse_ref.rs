@@ -33,7 +33,7 @@ where
         metadata: &SparseMetadata,
         depth: u32,
     ) -> Result<(), SparseError> {
-        SparseRef::<S>::check_depth(depth)?;
+        self.check_depth(depth)?;
         match *self.val {
             SparsePointedValue::Null => self.self_reset(state, metadata, depth)?,
             _ => {
@@ -51,7 +51,7 @@ where
         metadata: &SparseMetadata,
         depth: u32,
     ) -> Result<(), SparseError> {
-        SparseRef::<S>::check_depth(depth)?;
+        self.check_depth(depth)?;
         let vcheck = self.check_version(state);
         match vcheck {
             Ok(()) => (),
@@ -102,7 +102,7 @@ where
         metadata: &SparseMetadata,
         depth: u32,
     ) -> Result<(), SparseError> {
-        SparseRef::<S>::check_depth(depth)?;
+        self.check_depth(depth)?;
         self._self_reset(state, metadata, depth)
     }
 }

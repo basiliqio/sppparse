@@ -25,8 +25,8 @@ sppparse_derive = { path = "../sppparse_derive", version = "0.1.0" }
 path-absolutize = "3.0.6"
 auto_impl = "0.4"
 path-clean = "0.1.0"
-url_inner = { package = "url", version = "2", optional = true }
-semver_inner = { package = "semver", version = "0.11", optional = true }
+url_inner = { package = "url", version = "2", optional = true, features = ["serde"] }
+semver_inner = { package = "semver", version = "0.11", optional = true, features = ["serde"] }
 serde_path_to_error = "0.1.4"
 [dev-dependencies.cargo-husky]
 version = "1"

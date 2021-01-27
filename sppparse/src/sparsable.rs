@@ -11,7 +11,7 @@ use semver_inner::{Version, VersionReq};
 
 /// # Implements base to be parsed by [Sparse](crate)
 #[auto_impl(&mut, Box)]
-pub trait Sparsable {
+pub trait Sparsable: Serialize + DeserializeOwned {
     /// Initialize recusively a [Sparsable](Sparsable) pointer
     fn sparse_init(
         &mut self,
@@ -32,7 +32,7 @@ pub trait Sparsable {
 
     /// Check if the current depth isn't too much.
     /// This is the cyclic pointer protection mechanism
-    fn check_depth(depth: u32) -> Result<(), SparseError> {
+    fn check_depth(&self, depth: u32) -> Result<(), SparseError> {
         match depth < MAX_SPARSE_DEPTH {
             true => Ok(()),
             false => Err(SparseError::CyclicRef),

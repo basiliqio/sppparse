@@ -31,7 +31,7 @@ where
         metadata: &SparseMetadata,
         depth: u32,
     ) -> Result<(), SparseError> {
-        SparseSelector::<T>::check_depth(depth)?;
+        self.check_depth(depth)?;
         self.self_reset(state, metadata, depth)?;
         self.check_version(state)?;
         match self {
@@ -47,7 +47,7 @@ where
         metadata: &SparseMetadata,
         depth: u32,
     ) -> Result<(), SparseError> {
-        SparseSelector::<T>::check_depth(depth)?;
+        self.check_depth(depth)?;
         let vcheck = self.check_version(state);
         match vcheck {
             Ok(()) => (),
@@ -108,7 +108,7 @@ where
         metadata: &SparseMetadata,
         depth: u32,
     ) -> Result<(), SparseError> {
-        SparseSelector::<T>::check_depth(depth)?;
+        self.check_depth(depth)?;
         match self {
             SparseSelector::Obj(x) => Ok(x.self_reset(state, metadata, depth)?),
             SparseSelector::Ref(x) => Ok(x.self_reset(state, metadata, depth)?),
