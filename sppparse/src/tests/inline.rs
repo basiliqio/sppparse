@@ -97,3 +97,40 @@ fn nested_mut() {
         "The dereferenced value doesn't match"
     );
 }
+
+#[test]
+fn simple_struct() {
+    let val: Value = json!({
+        "hello": "world",
+        "key1":  "#/hello"
+    });
+    let parsed: SparseRoot<SimpleStructInline1> =
+        SparseRoot::new_from_value(val, PathBuf::from_str("hello.json").unwrap(), vec![]).unwrap();
+    assert_eq!(
+        *parsed.root_get().unwrap().key1.get().unwrap(),
+        "world",
+        "The dereferenced value doesn't match"
+    );
+}
+
+#[test]
+fn nested_struct() {
+    let val: Value = json!({
+        "list":
+        [
+            "world"
+        ],
+        "key1": {
+            "$ref": "#/list/0"
+        },
+        "key2": "#/key1",
+        "key3": "#/key2"
+    });
+    let parsed: SparseRoot<SimpleStructInline3> =
+        SparseRoot::new_from_value(val, PathBuf::from_str("hello.json").unwrap(), vec![]).unwrap();
+    assert_eq!(
+        *parsed.root_get().unwrap().key3.get().unwrap(),
+        "#/key1",
+        "The dereferenced value doesn't match"
+    );
+}

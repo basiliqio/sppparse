@@ -11,7 +11,7 @@ use semver_inner::{Version, VersionReq};
 
 /// # Implements base to be parsed by [Sparse](crate)
 #[auto_impl(&mut, Box)]
-pub trait Sparsable: Serialize + DeserializeOwned {
+pub trait Sparsable {
     /// Initialize recusively a [Sparsable](Sparsable) pointer
     fn sparse_init(
         &mut self,

@@ -23,7 +23,7 @@ pub struct SparseMetadata {
     pfile_path: PathBuf,
     /// The pointer string, as it is set in the original Value
     #[serde(rename = "$ref")]
-    #[getset(get = "pub")]
+    #[getset(get = "pub", get_mut = "pub")]
     raw_pointer: String,
     /// The parsed pointer, if any
     #[serde(skip)]

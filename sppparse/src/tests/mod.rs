@@ -47,6 +47,14 @@ pub(super) struct SimpleStruct1 {
 }
 
 #[derive(Serialize, Deserialize, SparsableInner, Debug, Getters)]
+pub(super) struct SimpleStructInline1 {
+    #[getset(get = "pub")]
+    hello: String,
+    #[getset(get = "pub")]
+    key1: SparseRefRawInline<String>,
+}
+
+#[derive(Serialize, Deserialize, SparsableInner, Debug, Getters)]
 pub(super) struct SimpleStruct2 {
     #[getset(get = "pub")]
     list: Vec<String>,
@@ -65,4 +73,17 @@ pub(super) struct SimpleStruct3 {
     key2: SparseSelector<String>,
     #[getset(get = "pub")]
     key3: SparseSelector<String>,
+}
+
+#[derive(Serialize, Deserialize, SparsableInner, Debug, Getters)]
+pub(super) struct SimpleStructInline3 {
+    #[allow(dead_code)]
+    #[getset(get = "pub")]
+    list: Vec<String>,
+    #[getset(get = "pub")]
+    key1: SparseSelector<String>,
+    #[getset(get = "pub")]
+    key2: SparseRefRawInline<String>,
+    #[getset(get = "pub")]
+    key3: SparseRefRawInline<String>,
 }
