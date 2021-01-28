@@ -376,7 +376,7 @@ checksum = "2c2c5334976f6000d0c36cf95a0b70ff4daa310b935aa4ce190d02f1012c81d0"
 
 [[package]]
 name = "sppparse"
-version = "0.1.1"
+version = "0.1.2"
 dependencies = [
  "cargo-husky",
  "getset",

@@ -1,16 +1,20 @@
 ## [Unreleased]
+
+## [0.1.2] - 2021-01-28
 ### Added
-- Added the trait `PartialEq` to Sppparse's structs
-- Added the trait `SparsableTrait` to serde_json::Value
-- Changed how the proc macro resolve its crate name
-- Added a public function to get the `SparsePointedValue` from `SparseRefRaw`
-- Added the `semver` feature, adding support for `semver::{Version, VersionReq}`
-- Changed how the `SparseValueMut` is constructed.
-- Added a function to resolve a new pointer at runtime using a `SparseValue` or a `SparseValueMut`
-- Removed bounds on structs
-- Changed `check_depth`: now accepts `&self` as the first argument
-- Added `SparseRefRawInline` to deserialize inline reference
-- Removed the `autoimpl` dependency
+- The trait `PartialEq` to Sppparse's structs
+- The trait `SparsableTrait` to serde_json::Value
+- A public function to get the `SparsePointedValue` from `SparseRefRaw`
+- The `semver` feature, adding support for `semver::{Version, VersionReq}`
+- A function to resolve a new pointer at runtime using a `SparseValue` or a `SparseValueMut`
+- `SparseRefRawInline` to deserialize inline reference
+### Changed
+- How the proc macro resolve its crate name
+- How the `SparseValueMut` is constructed.
+- `check_depth`: now accepts `&self` as the first argument
+### Removed
+- Bounds on structs
+- The `autoimpl` dependency
 
 ## [0.1.1] - 2021-01-20
 ### Added
