@@ -389,7 +389,7 @@ dependencies = [
  "serde_json",
  "serde_path_to_error",
  "serde_yaml",
- "sppparse_derive",
+ "sppparse_derive 0.1.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "tempfile",
  "thiserror",
  "url",
@@ -398,6 +398,19 @@ dependencies = [
 [[package]]
 name = "sppparse_derive"
 version = "0.1.1"
+dependencies = [
+ "proc-macro-crate",
+ "proc-macro2",
+ "quote",
+ "syn",
+ "synstructure",
+]
+
+[[package]]
+name = "sppparse_derive"
+version = "0.1.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "2475cf69961be356dcb6623ac6c98d85674b9d13ed1630f5ddd10da60c7cb226"
 dependencies = [
  "proc-macro-crate",
  "proc-macro2",
