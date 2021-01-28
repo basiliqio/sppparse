@@ -10,6 +10,7 @@
 - Removed bounds on structs
 - Changed `check_depth`: now accepts `&self` as the first argument
 - Added `SparseRefRawInline` to deserialize inline reference
+- Removed the `autoimpl` dependency
 
 ## [0.1.1] - 2021-01-20
 ### Added

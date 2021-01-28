@@ -1,8 +1,6 @@
 use super::*;
-use auto_impl::auto_impl;
 
 /// # Base shared by owned pointers
-#[auto_impl(&mut, Box)]
 pub trait SparsePointer<S: DeserializeOwned + Serialize + SparsableTrait> {
     /// Get the inner value of the pointer
     fn get(&self) -> Result<SparseValue<'_, S>, SparseError>;
@@ -23,7 +21,6 @@ pub trait SparsePointer<S: DeserializeOwned + Serialize + SparsableTrait> {
 }
 
 /// # Base shared by raw pointers
-#[auto_impl(&mut, Box)]
 pub trait SparsePointerRaw<S: DeserializeOwned + Serialize + SparsableTrait> {
     /// Get the inner value of the pointer
     fn get<'a>(

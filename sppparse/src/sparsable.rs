@@ -1,5 +1,4 @@
 use super::*;
-use auto_impl::auto_impl;
 use std::collections::*;
 use std::ffi::CString;
 
@@ -10,7 +9,6 @@ use url_inner::Url;
 use semver_inner::{Version, VersionReq};
 
 /// # Implements base to be parsed by [Sparse](crate)
-#[auto_impl(&mut, Box)]
 pub trait Sparsable {
     /// Initialize recusively a [Sparsable](Sparsable) pointer
     fn sparse_init(
