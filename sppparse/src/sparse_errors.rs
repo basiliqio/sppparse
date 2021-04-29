@@ -45,5 +45,5 @@ pub enum SparseError {
     SerdeYaml(#[from] serde_yaml::Error),
     /// When there is an IO failure
     #[error(transparent)]
-    IO(#[from] std::io::Error),
+    Io(#[from] std::io::Error),
 }
