@@ -54,7 +54,7 @@ where
     pub fn root_get_mut(&mut self) -> Result<SparseValueMut<'_, S>, SparseError> {
         let state = self.state().clone();
         self.check_version()?;
-        Ok(SparseValueMut::new_root(self.val_mut(), state)?)
+        SparseValueMut::new_root(self.val_mut(), state)
     }
 
     /// Reset the root object in case of initialization or update

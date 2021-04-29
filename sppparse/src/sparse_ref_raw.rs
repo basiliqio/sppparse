@@ -47,7 +47,7 @@ where
                 }
             }
         }
-        Ok(self.val.sparse_init(state, metadata, depth + 1)?)
+        self.val.sparse_init(state, metadata, depth + 1)
     }
 
     fn sparse_updt<'a>(
@@ -81,7 +81,7 @@ where
         &'a self,
         metadata: Option<&'a SparseMetadata>,
     ) -> Result<SparseValue<'a, S>, SparseError> {
-        Ok(self.val().get(metadata)?)
+        self.val().get(metadata)
     }
 
     fn get_mut<'a>(
@@ -95,7 +95,7 @@ where
                 .map_err(|_e| SparseError::StateAlreadyBorrowed)?;
             self.check_version(&state)?;
         }
-        Ok(self.val_mut().get_mut(state_cell, metadata)?)
+        self.val_mut().get_mut(state_cell, metadata)
     }
 
     fn self_reset<'a>(
@@ -147,7 +147,7 @@ where
         depth: u32,
     ) -> Result<(), SparseError> {
         self.val = SparsePointedValue::Null;
-        Ok(self.init_val(state, metadata, depth)?)
+        self.init_val(state, metadata, depth)
     }
 
     pub fn new(raw_pointer: String) -> Self {

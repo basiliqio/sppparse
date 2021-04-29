@@ -42,7 +42,7 @@ where
                 }
             }
         }
-        Ok(self.val.sparse_init(state, metadata, depth + 1)?)
+        self.val.sparse_init(state, metadata, depth + 1)
     }
 
     fn sparse_updt<'a>(
@@ -80,7 +80,7 @@ where
     }
 
     fn get(&self) -> Result<SparseValue<'_, S>, SparseError> {
-        Ok(self.val.get(Some(&self.utils))?)
+        self.val.get(Some(&self.utils))
     }
 
     fn get_mut(
@@ -93,7 +93,7 @@ where
                 .map_err(|_e| SparseError::StateAlreadyBorrowed)?;
             self.check_version(&state)?;
         }
-        Ok(self.val.get_mut(state_cell, Some(&self.utils))?)
+        self.val.get_mut(state_cell, Some(&self.utils))
     }
 
     fn self_reset(
@@ -117,8 +117,8 @@ where
         utils: &SparseMetadata,
     ) -> Result<&'a SparseStateFile, SparseError> {
         let pfile_path: &PathBuf = utils.pfile_path();
-        state.add_file(pfile_path)?;
-        Ok(state.get_state_file(pfile_path)?)
+        state.add_file(pfile_path.clone())?;
+        state.get_state_file(pfile_path)
     }
 
     /// Initialize the inner value using the [SparseState](SparseState).

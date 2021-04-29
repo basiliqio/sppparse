@@ -4,7 +4,7 @@ use rand::Rng;
 use serde::de::IntoDeserializer;
 use std::fs;
 use std::io::{Seek, SeekFrom, Write};
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 
 /// # Format in which [Sparse](crate) should read/write the files
 #[derive(Clone, Debug, Copy)]
@@ -121,18 +121,15 @@ impl SparseState {
         &self.root_base
     }
 
-    pub fn get_state_file<'a>(
-        &'a self,
-        path: &PathBuf,
-    ) -> Result<&'a SparseStateFile, SparseError> {
-        Ok(self.map_raw.get(path).ok_or(SparseError::NotInState)?)
+    pub fn get_state_file<'a>(&'a self, path: &Path) -> Result<&'a SparseStateFile, SparseError> {
+        self.map_raw.get(path).ok_or(SparseError::NotInState)
     }
 
     pub(crate) fn get_state_file_mut(
         &mut self,
-        path: &PathBuf,
+        path: &Path,
     ) -> Result<&mut SparseStateFile, SparseError> {
-        Ok(self.map_raw.get_mut(path).ok_or(SparseError::NotInState)?)
+        self.map_raw.get_mut(path).ok_or(SparseError::NotInState)
     }
 
     /// Deserialize the root document from the state to the type S
@@ -220,10 +217,10 @@ impl SparseState {
     }
 
     /// Deserialize a file from the state to the type S
-    pub fn add_file(&mut self, path: &PathBuf) -> Result<(), SparseError> {
+    pub fn add_file(&mut self, path: PathBuf) -> Result<(), SparseError> {
         let npath: PathBuf = match path.is_absolute() {
-            true => path.clone(),
-            false => SparseMetadata::normalize_path(path.clone(), self.get_root_path().clone())?,
+            true => path,
+            false => SparseMetadata::normalize_path(path, self.get_root_path().clone())?,
         };
         if self.map_raw.contains_key(&npath) {
             return Ok(());
