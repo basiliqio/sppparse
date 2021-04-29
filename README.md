@@ -1,10 +1,10 @@
 # Sppparse (Sparsed Pointer Parser)
 
 <a href="https://gitlab.com/basiliqio/sppparse/-/pipelines" alt="Gitlab pipeline status">
-  <img src="https://img.shields.io/gitlab/pipeline/basiliqio/sppparse/master">
+  <img src="https://img.shields.io/gitlab/pipeline/basiliqio/sppparse/main">
 </a>
 <a href="https://codecov.io/gl/basiliqio/sppparse" alt="Codecov">
-  <img src="https://img.shields.io/codecov/c/gitlab/basiliqio/sppparse?token=THQK5HQAR8">
+  <img src="https://img.shields.io/codecov/c/github/basiliqio/sppparse?token=eedpfshRUt">
 </a>
 <a href="https://crates.io/crates/sppparse" alt="Crates.io version">
   <img src="https://img.shields.io/crates/v/sppparse">
