@@ -1,10 +1,10 @@
 [package]
 name = "sppparse_derive"
-version = "0.1.1"
+version = "0.1.2"
 authors = ["Francis Le Roy <francis.leroy@protonmail.ch>"]
 edition = "2018"
 description = "Derive macro for Sppparse"
-repository = "https://gitlab.com/basiliq/sppparse"
+repository = "https://github.com/basiliqio/sppparse"
 license = "MIT"
 readme = "../README.md"
 

@@ -1,10 +1,10 @@
 # Sppparse (Sparsed Pointer Parser)
 
-<a href="https://gitlab.com/basiliq/sppparse/-/pipelines" alt="Gitlab pipeline status">
-  <img src="https://img.shields.io/gitlab/pipeline/basiliq/sppparse/master">
+<a href="https://gitlab.com/basiliqio/sppparse/-/pipelines" alt="Gitlab pipeline status">
+  <img src="https://img.shields.io/gitlab/pipeline/basiliqio/sppparse/master">
 </a>
-<a href="https://codecov.io/gl/basiliq/sppparse" alt="Codecov">
-  <img src="https://img.shields.io/codecov/c/gitlab/basiliq/sppparse?token=THQK5HQAR8">
+<a href="https://codecov.io/gl/basiliqio/sppparse" alt="Codecov">
+  <img src="https://img.shields.io/codecov/c/gitlab/basiliqio/sppparse?token=THQK5HQAR8">
 </a>
 <a href="https://crates.io/crates/sppparse" alt="Crates.io version">
   <img src="https://img.shields.io/crates/v/sppparse">
@@ -12,7 +12,7 @@
 <a href="https://crates.io/crates/sppparse" alt="Crates.io license">
   <img src="https://img.shields.io/crates/l/sppparse?label=license">
 </a>
-<a href="https://docs.rs/sppparse/0.1.0/sppparse/" alt="Docs.rs">
+<a href="https://docs.rs/sppparse" alt="Docs.rs">
   <img src="https://docs.rs/sppparse/badge.svg">
 </a>
 
@@ -32,6 +32,7 @@ Built on top of [serde](https://serde.rs/), this library allows a generic way to
 The following features are available :
 
 - `url`: Add support for `url::Url`
+- `semver`: Add support for `semver::Version`
 
 ## Example
 

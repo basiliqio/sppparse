@@ -1,10 +1,10 @@
 [package]
 name = "sppparse"
-version = "0.1.2"
+version = "0.1.3"
 authors = ["Francis Le Roy <francis.leroy@protonmail.ch>"]
 edition = "2018"
 description = "Sparsed pointer parser for JSON/YAML"
-repository = "https://gitlab.com/basiliq/sppparse"
+repository = "https://github.com/basiliqio/sppparse"
 license = "MIT"
 readme = "../README.md"
 keywords = ["json", "yaml", "sparse", "pointer", "parsing"]
