@@ -1,11 +1,11 @@
 [package]
 name = "sppparse"
-version = "0.1.3"
+version = "0.1.4"
 authors = ["Francis Le Roy <francis.leroy@protonmail.ch>"]
 edition = "2018"
 description = "Sparsed pointer parser for JSON/YAML"
 repository = "https://github.com/basiliqio/sppparse"
-license = "MIT"
+license = "MIT OR Apache-2.0"
 readme = "../README.md"
 keywords = ["json", "yaml", "sparse", "pointer", "parsing"]
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
@@ -21,7 +21,7 @@ serde_yaml = "0.8"
 getset = "0.1.1"
 thiserror = "1"
 rand = "0.8"
-sppparse_derive = "0.1.2"
+sppparse_derive = "0.1.3"
 path-absolutize = "3.0.6"
 path-clean = "0.1.0"
 url_inner = { package = "url", version = "2", optional = true }
